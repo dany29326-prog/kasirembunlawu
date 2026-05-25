@@ -17,6 +17,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         }
         
+        /* Sidebar */
         .sidebar {
             width: 260px;
             background: #161b22;
@@ -40,9 +41,10 @@
         }
         
         .sidebar-logo .sub {
-            font-size: 12px;
-            color: #7d8590;
-            margin-top: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #00e5c0;
+            margin-top: 8px;
         }
         
         .nav-item {
@@ -229,6 +231,21 @@
             color: white;
         }
         
+        .btn-primary {
+            width: 100%;
+            background: #1d8cf8;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .btn-primary:hover {
+            background: #0c6bcf;
+        }
+        
         .pay-methods {
             display: flex;
             gap: 10px;
@@ -260,6 +277,65 @@
         .page.active {
             display: block;
             animation: fadeIn 0.3s ease;
+        }
+        
+        /* PIN Login Page */
+        .pin-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0d1117;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+        }
+        
+        .pin-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+        }
+        
+        .pin-card h2 {
+            color: #00e5c0;
+            margin-bottom: 20px;
+        }
+        
+        .pin-input {
+            font-size: 32px;
+            letter-spacing: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .pin-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pin-btn {
+            background: #1c2330;
+            border: 1px solid #30363d;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .pin-btn:hover {
+            background: #00e5c0;
+            color: #0d1117;
         }
         
         @keyframes fadeIn {
@@ -307,14 +383,6 @@
             justify-content: space-between;
         }
         
-        .summary-total {
-            padding: 10px 0;
-            font-size: 18px;
-            font-weight: bold;
-            border-top: 2px solid #30363d;
-            margin-top: 10px;
-        }
-        
         .ongkir-row {
             display: flex;
             gap: 10px;
@@ -358,31 +426,41 @@
             font-weight: normal;
         }
         
+        .grand-total {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00e5c0;
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #30363d;
+        }
+        
+        .label-ongkir {
+            color: #7d8590;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
             }
-            
             .sidebar.show {
                 transform: translateX(0);
             }
-            
             .main {
                 margin-left: 0;
             }
-            
             .grid4 {
                 grid-template-columns: 1fr;
             }
-            
             .produk-grid {
                 grid-template-columns: 1fr;
             }
-            
             .ongkir-row {
                 flex-direction: column;
             }
-            
             .ongkir-row input,
             .ongkir-row button {
                 width: 100%;
@@ -432,34 +510,67 @@
             word-break: break-all;
         }
         
-        .grand-total {
-            font-size: 28px;
-            font-weight: bold;
-            color: #00e5c0;
-            text-align: right;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #30363d;
-        }
-        
-        .label-ongkir {
-            color: #7d8590;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        
-        .inline-input {
+        .setting-item {
             display: flex;
-            gap: 10px;
-            align-items: flex-end;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #30363d;
         }
         
-        .inline-input .input-group {
-            flex: 1;
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-weight: bold;
+        }
+        
+        .setting-desc {
+            font-size: 12px;
+            color: #7d8590;
+            margin-top: 5px;
+        }
+        
+        .pin-display {
+            font-family: monospace;
+            font-size: 24px;
+            letter-spacing: 5px;
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
+
+<!-- PIN LOGIN PAGE -->
+<div id="pinPage" class="pin-page">
+    <div class="pin-card">
+        <h2>🔐 DepotPintar</h2>
+        <p style="color: #7d8590; margin-bottom: 20px;">Masukkan PIN untuk membuka aplikasi</p>
+        <input type="password" id="pinInput" class="pin-input" maxlength="6" placeholder="••••••" style="font-size: 28px; text-align: center; letter-spacing: 8px;">
+        <div class="pin-buttons">
+            <button class="pin-btn" onclick="pinInput(1)">1</button>
+            <button class="pin-btn" onclick="pinInput(2)">2</button>
+            <button class="pin-btn" onclick="pinInput(3)">3</button>
+            <button class="pin-btn" onclick="pinInput(4)">4</button>
+            <button class="pin-btn" onclick="pinInput(5)">5</button>
+            <button class="pin-btn" onclick="pinInput(6)">6</button>
+            <button class="pin-btn" onclick="pinInput(7)">7</button>
+            <button class="pin-btn" onclick="pinInput(8)">8</button>
+            <button class="pin-btn" onclick="pinInput(9)">9</button>
+            <button class="pin-btn" onclick="pinInput(0)">0</button>
+            <button class="pin-btn" onclick="pinDelete()">⌫</button>
+            <button class="pin-btn" onclick="pinLogin()" style="background: #00e5c0; color: #0d1117;">✔</button>
+        </div>
+        <button class="btn-secondary" onclick="setupNewPIN()" style="margin-top: 20px;">🔑 Setup PIN Baru</button>
+    </div>
+</div>
+
+<!-- MAIN APP (awalnya tersembunyi) -->
+<div id="mainApp" style="display: none;">
 
 <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
 
@@ -483,6 +594,9 @@
         </div>
         <div class="nav-item" onclick="showPage('laporan'); toggleSidebar(false)">
             📈 Laporan
+        </div>
+        <div class="nav-item" onclick="showPage('pengaturan'); toggleSidebar(false)">
+            ⚙️ Pengaturan
         </div>
     </nav>
 </aside>
@@ -515,7 +629,7 @@
         </div>
     </div>
 
-    <!-- Kasir Page dengan Ongkir -->
+    <!-- Kasir Page -->
     <div id="page-kasir" class="page">
         <div class="card">
             <div class="card-title">👤 Petugas Kasir</div>
@@ -536,13 +650,11 @@
             <div class="card-title">📝 Ringkasan Pesanan</div>
             <div id="order-items">Belum ada produk dipilih</div>
             
-            <!-- Subtotal -->
             <div class="summary-row" style="margin-top: 10px;">
                 <span>Subtotal</span>
                 <span id="subtotal-display">Rp0</span>
             </div>
             
-            <!-- Input Ongkir -->
             <div style="margin: 15px 0;">
                 <div class="label-ongkir">🚚 Biaya Ongkir (opsional)</div>
                 <div class="ongkir-row">
@@ -551,7 +663,6 @@
                 </div>
             </div>
             
-            <!-- Grand Total -->
             <div class="grand-total" id="grand-total-display">
                 Total: Rp0
             </div>
@@ -569,7 +680,6 @@
         <button class="btn-bayar" onclick="prosesTransaksi()">✅ BAYAR SEKARANG</button>
         <button class="btn-secondary" onclick="resetKasir()">🔄 Reset Kasir</button>
         
-        <!-- Tombol Printer Bluetooth -->
         <div style="display: flex; gap: 10px; margin-top: 10px;">
             <button class="btn-secondary" id="btnConnectPrinter" onclick="connectBluetoothPrinter()" style="flex:1;">
                 🔌 Konek Printer Bluetooth
@@ -606,14 +716,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Pengaturan Page -->
+    <div id="page-pengaturan" class="page">
+        <div class="card">
+            <div class="card-title">🔐 Keamanan</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">PIN Aplikasi</div>
+                    <div class="setting-desc">PIN untuk membuka DepotPintar</div>
+                </div>
+                <button class="btn-secondary" onclick="gantiPIN()" style="margin:0; width:auto; padding:8px 20px;">Ganti PIN</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">🖨️ Printer</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Printer Thermal Bluetooth</div>
+                    <div class="setting-desc">Hubungkan printer ke HP/Tablet</div>
+                </div>
+                <button class="btn-secondary" onclick="connectBluetoothPrinter()" style="margin:0; width:auto; padding:8px 20px;">Konek Printer</button>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Cetak Struk Otomatis</div>
+                    <div class="setting-desc">Cetak struk setelah transaksi berhasil</div>
+                </div>
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" id="autoPrintSetting" checked style="width: auto; margin: 0; transform: scale(1.2);">
+                </label>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">ℹ️ Tentang Aplikasi</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">DepotPintar</div>
+                    <div class="setting-desc">Versi 2.0.0 | Sistem Kasir Depot Air Minum</div>
+                    <div class="setting-desc">Dibuat untuk EMBUN LAWU, Tawangmangu</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <div id="toast" class="toast"></div>
 
+</div> <!-- Penutup mainApp -->
+
 <script>
 // ========== KONFIGURASI ==========
-// !!! GANTI DENGAN URL APPS SCRIPT ANDA YANG SUDAH DI-DEPLOY !!!
 const API_URL = 'https://script.google.com/macros/s/AKfycby_RT12gFCm0pWgwVGN-bPynYYlXnFjyDGCAhBOXL8p9JlkwIadSbrl5nmuzeHi2k3Rmg/exec';
+
+// ========== FUNGSI UTAMA ==========
+function formatRupiah(angka) {
+    if (!angka && angka !== 0) return 'Rp0';
+    return 'Rp' + angka.toLocaleString('id-ID');
+}
+
+function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show';
+    if (isError) toast.classList.add('error');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function toggleSidebar(show) {
+    const sidebar = document.getElementById('sidebar');
+    if (show === undefined) {
+        sidebar.classList.toggle('show');
+    } else if (!show) {
+        sidebar.classList.remove('show');
+    }
+}
 
 // ========== GLOBAL VARIABLES ==========
 let DB = { 
@@ -627,267 +806,9 @@ let cart = {};
 let payMethod = 'tunai';
 let currentPetugas = null;
 let isLoading = false;
-let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
+let ongkir = 0;
 
-// ========== PRINTER THERMAL BLUETOOTH UNTUK HP/TABLET ==========
-let bluetoothDevice = null;
-let bluetoothCharacteristic = null;
-
-// Fungsi konek printer via Bluetooth
-async function connectBluetoothPrinter() {
-    try {
-        showToast('🔍 Mencari printer Bluetooth...');
-        
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: false,
-            filters: [
-                { namePrefix: 'XPrinter' },
-                { namePrefix: 'BT Printer' },
-                { namePrefix: 'Thermal' },
-                { namePrefix: '58mm' },
-                { namePrefix: 'Printer' }
-            ],
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
-        });
-        
-        console.log('Printer dipilih:', device.name);
-        
-        device.addEventListener('gattserverdisconnected', onPrinterDisconnected);
-        
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
-        
-        bluetoothDevice = device;
-        
-        // Update UI
-        document.getElementById('btnPrint').style.display = 'block';
-        document.getElementById('printerStatus').innerHTML = `✅ Printer ${device.name} siap pakai`;
-        document.getElementById('btnConnectPrinter').innerHTML = '🔌 Printer Terhubung';
-        document.getElementById('btnConnectPrinter').style.borderColor = '#3dd68c';
-        document.getElementById('btnConnectPrinter').style.color = '#3dd68c';
-        
-        showToast(`✅ Printer ${device.name} terhubung!`);
-        
-        // Test print
-        setTimeout(() => testPrint(), 500);
-        
-    } catch(error) {
-        console.error('Koneksi gagal:', error);
-        showToast('❌ Gagal konek printer: ' + error.message, true);
-        document.getElementById('printerStatus').innerHTML = '⚠️ ' + error.message;
-    }
-}
-
-function onPrinterDisconnected() {
-    showToast('⚠️ Printer terputus. Klik "Konek Printer" lagi ya!', true);
-    document.getElementById('btnPrint').style.display = 'none';
-    document.getElementById('printerStatus').innerHTML = '⚠️ Printer terputus, konek ulang';
-    document.getElementById('btnConnectPrinter').innerHTML = '🔌 Konek Printer Bluetooth';
-    document.getElementById('btnConnectPrinter').style.borderColor = '';
-    document.getElementById('btnConnectPrinter').style.color = '';
-    bluetoothCharacteristic = null;
-    bluetoothDevice = null;
-}
-
-function testPrint() {
-    if (!bluetoothCharacteristic) {
-        showToast('❌ Printer belum konek', true);
-        return;
-    }
-    
-    const testData = [
-        0x0A,
-        ...strToBytes('===== TEST PRINT ====='),
-        0x0A, 0x0A,
-        ...strToBytes('Printer thermal siap digunakan!'),
-        0x0A, 0x0A,
-        ...strToBytes('DepotPintar - EMBUN LAWU'),
-        0x0A, 0x0A, 0x0A, 0x0A,
-        0x1D, 0x56, 0x42, 0x00
-    ];
-    
-    sendToPrinter(new Uint8Array(testData));
-    showToast('🖨️ Test print dikirim ke printer');
-}
-
-function sendToPrinter(data) {
-    if (!bluetoothCharacteristic) {
-        throw new Error('Printer tidak terhubung');
-    }
-    return bluetoothCharacteristic.writeValue(data);
-}
-
-function strToBytes(str) {
-    const encoder = new TextEncoder();
-    return encoder.encode(str);
-}
-
-function formatRupiahPrinter(angka) {
-    if (!angka && angka !== 0) return 'Rp0';
-    return 'Rp' + angka.toLocaleString('id-ID');
-}
-
-// Ambil transaksi terakhir yang disimpan
-function getLastTransactionFromDB() {
-    if (DB.transaksi && DB.transaksi.length > 0) {
-        return DB.transaksi[DB.transaksi.length - 1];
-    }
-    return null;
-}
-
-// Cetak struk transaksi
-async function printStruk() {
-    if (!bluetoothCharacteristic) {
-        showToast('❌ Printer belum konek! Klik "Konek Printer Bluetooth" dulu', true);
-        return;
-    }
-    
-    const transaksi = getLastTransactionFromDB();
-    
-    if (!transaksi) {
-        showToast('❌ Tidak ada transaksi untuk dicetak', true);
-        return;
-    }
-    
-    showToast('🖨️ Mencetak struk...');
-    
-    // Kumpulan perintah ESC/POS untuk printer thermal
-    const commands = [
-        0x1B, 0x40,           // Initialize printer
-        0x1B, 0x61, 0x01,     // Center align
-        0x1D, 0x21, 0x11,     // Font besar + tebal
-        ...strToBytes('\n'),
-        ...strToBytes('DEPOTPINTAR'),
-        0x0A,
-        0x1D, 0x21, 0x00,     // Font normal
-        ...strToBytes(DB.settings?.nama_depot || 'EMBUN LAWU'),
-        0x0A,
-        ...strToBytes('Depot Air Minum'),
-        0x0A,
-        ...strToBytes('================================'),
-        0x0A,
-        0x1B, 0x61, 0x00,     // Left align
-    ];
-    
-    // Info transaksi
-    commands.push(...strToBytes(`Tanggal  : ${transaksi.tanggal || '-'}`));
-    commands.push(0x0A);
-    commands.push(...strToBytes(`Waktu    : ${new Date().toLocaleTimeString('id-ID')}`));
-    commands.push(0x0A);
-    commands.push(...strToBytes(`Kasir    : ${transaksi.petugas_nama || 'KHOLID'}`));
-    commands.push(0x0A);
-    commands.push(...strToBytes(`Pelanggan: ${transaksi.nama || 'Umum'}`));
-    commands.push(0x0A);
-    commands.push(...strToBytes(`Metode   : ${transaksi.bayar || 'tunai'}`));
-    commands.push(0x0A);
-    commands.push(...strToBytes('================================'));
-    commands.push(0x0A);
-    
-    // Header item
-    commands.push(0x1B, 0x45, 0x01);  // Bold on
-    commands.push(...strToBytes('Item              Qty  Harga    Sub'));
-    commands.push(0x0A);
-    commands.push(0x1B, 0x45, 0x00);  // Bold off
-    commands.push(...strToBytes('--------------------------------'));
-    commands.push(0x0A);
-    
-    // Daftar item
-    if (transaksi.items && transaksi.items.length > 0) {
-        transaksi.items.forEach(item => {
-            const nama = (item.nama || 'Produk').slice(0, 14);
-            const qty = item.qty || 0;
-            const harga = item.harga || 0;
-            const subtotal = item.subtotal || (harga * qty);
-            
-            commands.push(...strToBytes(`${nama.padEnd(14)} ${qty}   ${formatRupiahPrinter(harga).padEnd(8)} ${formatRupiahPrinter(subtotal)}`));
-            commands.push(0x0A);
-        });
-    }
-    
-    commands.push(...strToBytes('================================'));
-    commands.push(0x0A);
-    
-    // Subtotal
-    const subtotal = transaksi.subtotal || transaksi.total;
-    commands.push(...strToBytes(`Subtotal   : ${formatRupiahPrinter(subtotal)}`));
-    commands.push(0x0A);
-    
-    // Ongkir
-    if (transaksi.ongkir && transaksi.ongkir > 0) {
-        commands.push(...strToBytes(`Ongkir     : ${formatRupiahPrinter(transaksi.ongkir)}`));
-        commands.push(0x0A);
-    }
-    
-    commands.push(...strToBytes('--------------------------------'));
-    commands.push(0x0A);
-    
-    // TOTAL (besar + tebal)
-    commands.push(0x1B, 0x45, 0x01);
-    commands.push(0x1D, 0x21, 0x11);
-    commands.push(...strToBytes(`TOTAL      : ${formatRupiahPrinter(transaksi.total)}`));
-    commands.push(0x0A);
-    commands.push(0x1D, 0x21, 0x00);
-    commands.push(0x1B, 0x45, 0x00);
-    
-    // Total galon
-    if (transaksi.totalGalon && transaksi.totalGalon > 0) {
-        commands.push(...strToBytes(`Total Galon: ${transaksi.totalGalon} galon`));
-        commands.push(0x0A);
-    }
-    
-    commands.push(...strToBytes('================================'));
-    commands.push(0x0A);
-    commands.push(0x0A);
-    
-    // Footer
-    commands.push(0x1B, 0x61, 0x01);  // Center align
-    commands.push(...strToBytes('Terima Kasih'));
-    commands.push(0x0A);
-    commands.push(...strToBytes('Telah berbelanja di DepotPintar'));
-    commands.push(0x0A);
-    commands.push(...strToBytes('Silahkan datang kembali'));
-    commands.push(0x0A);
-    commands.push(0x0A);
-    commands.push(0x0A);
-    commands.push(0x0A);
-    
-    // Potong kertas
-    commands.push(0x1D, 0x56, 0x42, 0x00);  // Full cut
-    
-    await sendToPrinter(new Uint8Array(commands));
-    showToast('✅ Struk berhasil dicetak!');
-}
-
-// Cetak otomatis setelah transaksi berhasil
-async function autoPrint() {
-    if (bluetoothCharacteristic) {
-        showToast('🖨️ Mencetak struk otomatis...');
-        setTimeout(() => printStruk(), 1000);
-    } else {
-        showToast('ℹ️ Printer belum konek. Klik tombol biru untuk cetak manual nanti', false);
-    }
-}
-
-// Cek dukungan WebBluetooth di browser
-function checkBluetoothSupport() {
-    if ('bluetooth' in navigator) {
-        console.log('✅ Browser support WebBluetooth');
-        return true;
-    } else {
-        console.log('❌ Browser TIDAK support WebBluetooth');
-        document.getElementById('printerStatus').innerHTML = '⚠️ Browser tidak support WebBluetooth. Gunakan Chrome/Edge Android.';
-        document.getElementById('btnConnectPrinter').style.display = 'none';
-        return false;
-    }
-}
-
-// Panggil saat halaman load
-document.addEventListener('DOMContentLoaded', () => {
-    checkBluetoothSupport();
-});
-
-// ========== FUNGSI ONGKIR ==========
+// ========== ONGKIR ==========
 function updateOngkir() {
     const input = document.getElementById('ongkir-input');
     ongkir = parseInt(input.value) || 0;
@@ -978,7 +899,6 @@ async function loadAllData() {
     
     try {
         let res;
-        
         try {
             res = await callAPI('getAllData');
             console.log('API Response:', res);
@@ -1000,9 +920,7 @@ async function loadAllData() {
         
         if (!DB.produk) DB.produk = [];
         
-        const aktifProduk = DB.produk.filter(p => {
-            return p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True';
-        });
+        const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
         
         console.log(`✅ Loaded: ${aktifProduk.length} produk aktif`);
         
@@ -1042,24 +960,6 @@ async function loadAllData() {
         const dummy = getDummyData();
         DB = dummy.data;
         renderProdukGrid();
-        
-        const grid = document.getElementById('produk-grid');
-        if (grid && aktifProduk.length === 0) {
-            const errorHtml = `
-                <div class="error-box" style="grid-column:1/-1;">
-                    <strong>⚠️ KONEKSI KE SERVER GAGAL</strong><br>
-                    Menggunakan data demo untuk testing.<br><br>
-                    Pastikan:<br>
-                    1. URL Apps Script sudah benar<br>
-                    2. Deployment: Execute as: Me, Access: Anyone<br>
-                    3. Sheet "produk" sudah terisi<br><br>
-                    <div class="debug-info">
-                        URL Saat Ini: ${API_URL}
-                    </div>
-                </div>
-            `;
-            grid.innerHTML = errorHtml + grid.innerHTML;
-        }
     } finally {
         isLoading = false;
     }
@@ -1074,11 +974,9 @@ function renderProdukGrid() {
     
     if (aktifProduk.length === 0) {
         const defaultProducts = [
-            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-            { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-            { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
+            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
+            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 }
         ];
         
         let html = '';
@@ -1123,11 +1021,8 @@ function renderProdukGrid() {
 
 function changeCart(id, delta) {
     const qty = (cart[id] || 0) + delta;
-    if (qty <= 0) {
-        delete cart[id];
-    } else {
-        cart[id] = qty;
-    }
+    if (qty <= 0) delete cart[id];
+    else cart[id] = qty;
     renderProdukGrid();
 }
 
@@ -1141,9 +1036,7 @@ function updateSummary() {
             const defaultProducts = {
                 'd1': { nama: 'Galon Biasa', icon: '💧', harga: 6000 },
                 'd2': { nama: 'Galon RO', icon: '💧✨', harga: 10000 },
-                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 },
-                'd4': { nama: 'Ultra 330ml', icon: '🧃', harga: 1700 },
-                'd5': { nama: 'Ultra 600ml', icon: '🧃', harga: 2000 }
+                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 }
             };
             p = defaultProducts[id];
         }
@@ -1151,34 +1044,20 @@ function updateSummary() {
         if (p) {
             const subtotalItem = p.harga * cart[id];
             subtotal += subtotalItem;
-            html += `
-                <div class="summary-row">
-                    <span>${p.icon} ${p.nama} x${cart[id]}</span>
-                    <span>${formatRupiah(subtotalItem)}</span>
-                </div>
-            `;
+            html += `<div class="summary-row"><span>${p.icon} ${p.nama} x${cart[id]}</span><span>${formatRupiah(subtotalItem)}</span></div>`;
         }
     }
     
-    const orderItemsDiv = document.getElementById('order-items');
-    if (orderItemsDiv) {
-        orderItemsDiv.innerHTML = html || '<div style="color:#7d8590;">Belum ada produk dipilih</div>';
-    }
+    document.getElementById('order-items').innerHTML = html || '<div style="color:#7d8590;">Belum ada produk dipilih</div>';
+    document.getElementById('subtotal-display').innerText = formatRupiah(subtotal);
     
-    // Update subtotal
-    const subtotalDisplay = document.getElementById('subtotal-display');
-    if (subtotalDisplay) {
-        subtotalDisplay.innerText = formatRupiah(subtotal);
-    }
-    
-    // Hitung grand total (subtotal + ongkir)
     const grandTotal = subtotal + ongkir;
-    const grandTotalDisplay = document.getElementById('grand-total-display');
-    if (grandTotalDisplay) {
+    const grandDisplay = document.getElementById('grand-total-display');
+    if (grandDisplay) {
         if (ongkir > 0) {
-            grandTotalDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)} <span style="font-size:12px; color:#7d8590;">(termasuk ongkir ${formatRupiah(ongkir)})</span>`;
+            grandDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)} <span style="font-size:12px; color:#7d8590;">(termasuk ongkir ${formatRupiah(ongkir)})</span>`;
         } else {
-            grandTotalDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)}`;
+            grandDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)}`;
         }
     }
     
@@ -1189,25 +1068,17 @@ function updateSummary() {
 function selectPay(method) {
     payMethod = method;
     document.querySelectorAll('.pay-btn').forEach(btn => btn.classList.remove('selected'));
-    if (method === 'tunai') {
-        document.querySelectorAll('.pay-btn')[0].classList.add('selected');
-    } else if (method === 'qris') {
-        document.querySelectorAll('.pay-btn')[1].classList.add('selected');
-    } else {
-        document.querySelectorAll('.pay-btn')[2].classList.add('selected');
-    }
+    if (method === 'tunai') document.querySelectorAll('.pay-btn')[0].classList.add('selected');
+    else if (method === 'qris') document.querySelectorAll('.pay-btn')[1].classList.add('selected');
+    else document.querySelectorAll('.pay-btn')[2].classList.add('selected');
 }
 
 function setPetugas() {
     const id = document.getElementById('selectPetugas').value;
     currentPetugas = DB.petugas?.find(p => p.id === id);
-    if (!currentPetugas && id === 'P001') {
-        currentPetugas = { id: 'P001', nama: 'KHOLID' };
-    }
+    if (!currentPetugas && id === 'P001') currentPetugas = { id: 'P001', nama: 'KHOLID' };
     const statusSpan = document.getElementById('petugasStatus');
-    if (statusSpan) {
-        statusSpan.innerText = currentPetugas ? `✅ ${currentPetugas.nama}` : '';
-    }
+    if (statusSpan) statusSpan.innerText = currentPetugas ? `✅ ${currentPetugas.nama}` : '';
 }
 
 async function prosesTransaksi() {
@@ -1223,22 +1094,15 @@ async function prosesTransaksi() {
             const defaultProducts = {
                 'd1': { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
                 'd2': { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
-                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 },
-                'd4': { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700 },
-                'd5': { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000 }
+                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 }
             };
             p = defaultProducts[id];
         }
         
         if (p && cart[id] > 0) {
             items.push({
-                id: p.id,
-                nama: p.nama,
-                icon: p.icon,
-                satuan: p.satuan || 'galon',
-                harga: p.harga,
-                qty: cart[id],
-                subtotal: p.harga * cart[id]
+                id: p.id, nama: p.nama, icon: p.icon, satuan: p.satuan || 'galon',
+                harga: p.harga, qty: cart[id], subtotal: p.harga * cart[id]
             });
         }
     }
@@ -1265,17 +1129,10 @@ async function prosesTransaksi() {
         waktu: new Date().toISOString(),
         petugas_id: currentPetugas.id,
         petugas_nama: currentPetugas.nama,
-        nama: nama,
-        wa: wa,
-        items: items,
-        ongkir: ongkir,
-        subtotal: subtotal,
-        total: total,
-        bayar: payMethod,
+        nama: nama, wa: wa, items: items, ongkir: ongkir,
+        subtotal: subtotal, total: total, bayar: payMethod,
         status: payMethod === 'hutang' ? 'hutang' : 'lunas',
-        catatan: '',
-        hutangLunas: false,
-        totalGalon: totalGalon
+        catatan: '', hutangLunas: false, totalGalon: totalGalon
     };
     
     showToast('💾 Menyimpan transaksi...');
@@ -1285,10 +1142,8 @@ async function prosesTransaksi() {
         
         if (res.status === 'ok') {
             showToast('✅ Transaksi berhasil disimpan!');
-            autoPrint();  // Cetak struk otomatis jika printer terhubung
-            // Reset semua
-            cart = {};
-            ongkir = 0;
+            autoPrint();
+            cart = {}; ongkir = 0;
             document.getElementById('ongkir-input').value = 0;
             renderProdukGrid();
             document.getElementById('kasir-nama').value = '';
@@ -1299,8 +1154,7 @@ async function prosesTransaksi() {
             offlineTrx.push(trx);
             localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
             showToast('⚠️ Tersimpan offline (koneksi terbatas)', true);
-            cart = {};
-            ongkir = 0;
+            cart = {}; ongkir = 0;
             document.getElementById('ongkir-input').value = 0;
             renderProdukGrid();
         }
@@ -1309,16 +1163,14 @@ async function prosesTransaksi() {
         offlineTrx.push(trx);
         localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
         showToast('⚠️ Tersimpan offline (koneksi terbatas)', true);
-        cart = {};
-        ongkir = 0;
+        cart = {}; ongkir = 0;
         document.getElementById('ongkir-input').value = 0;
         renderProdukGrid();
     }
 }
 
 function resetKasir() {
-    cart = {};
-    ongkir = 0;
+    cart = {}; ongkir = 0;
     document.getElementById('ongkir-input').value = 0;
     renderProdukGrid();
     document.getElementById('kasir-nama').value = '';
@@ -1331,20 +1183,8 @@ function renderDashboard() {
     const today = new Date();
     const todayString = today.toISOString().slice(0, 10);
     
-    // Format tanggal hari ini sebagai string yang bisa dibandingkan
-    const todayFormatted = today.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-    }).replace(/,/g, '');
-    
-    console.log('Today:', todayFormatted);
-    
-    // Filter transaksi berdasarkan tanggal hari ini
     const todayTrx = DB.transaksi.filter(t => {
         let tgl = t.tanggal || '';
-        // Coba format tanggal dari API (Mon May 25 2026)
         if (tgl.includes('GMT') || tgl.includes('GM')) {
             const parts = tgl.split(' ');
             if (parts.length >= 4) {
@@ -1359,23 +1199,16 @@ function renderDashboard() {
         return tgl.slice(0, 10) === todayString;
     });
     
-    // Hitung omset (hanya status lunas)
     const omset = todayTrx.filter(t => t.status === 'lunas').reduce((s, t) => s + (t.total || 0), 0);
-    
-    // Hitung galon terjual
     const galon = todayTrx.reduce((s, t) => s + (t.totalGalon || 0), 0);
-    
-    // Hitung total hutang
     const hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s, t) => s + (t.total || 0), 0);
     
-    // Update DOM
     document.getElementById('dash-omset').innerText = formatRupiah(omset);
     document.getElementById('dash-omset-sub').innerText = todayTrx.length + ' transaksi';
     document.getElementById('dash-galon').innerText = galon;
     document.getElementById('dash-hutang').innerText = formatRupiah(hutang);
     document.getElementById('dash-pelanggan').innerText = DB.pelanggan.length;
     
-    // Tampilkan transaksi terbaru
     let html = '';
     if (todayTrx.length === 0) {
         html = '<div style="color:#7d8590;">Belum ada transaksi hari ini</div>';
@@ -1388,8 +1221,6 @@ function renderDashboard() {
         });
     }
     document.getElementById('dash-trx-list').innerHTML = html;
-    
-    console.log('Dashboard - Omset:', omset, 'Galon:', galon, 'Transaksi:', todayTrx.length);
 }
 
 function renderPelanggan() {
@@ -1405,17 +1236,13 @@ function renderPelanggan() {
                     </div>`;
         });
     }
-    
-    const pelListEl = document.getElementById('pel-list');
-    if (pelListEl) pelListEl.innerHTML = html;
+    document.getElementById('pel-list').innerHTML = html;
 }
 
 function renderHutang() {
     const hutangTrx = (DB.transaksi || []).filter(t => t.status === 'hutang' && !t.hutangLunas);
     const byName = {};
-    hutangTrx.forEach(t => {
-        byName[t.nama] = (byName[t.nama] || 0) + t.total;
-    });
+    hutangTrx.forEach(t => { byName[t.nama] = (byName[t.nama] || 0) + t.total; });
     
     let html = '';
     if (Object.keys(byName).length === 0) {
@@ -1428,15 +1255,12 @@ function renderHutang() {
                     </div>`;
         });
     }
-    
-    const hutangListEl = document.getElementById('hutang-list');
-    if (hutangListEl) hutangListEl.innerHTML = html;
+    document.getElementById('hutang-list').innerHTML = html;
 }
 
 function renderLaporan() {
     if (!DB.transaksi || DB.transaksi.length === 0) {
-        const lapEl = document.getElementById('lap-tbody');
-        if (lapEl) lapEl.innerHTML = '<div style="color:#7d8590;">Belum ada transaksi</div>';
+        document.getElementById('lap-tbody').innerHTML = '<div style="color:#7d8590;">Belum ada transaksi</div>';
         return;
     }
     
@@ -1456,22 +1280,216 @@ function renderLaporan() {
                 </tr>`;
     });
     html += '</tbody></table>';
-    
-    const lapEl = document.getElementById('lap-tbody');
-    if (lapEl) lapEl.innerHTML = html;
+    document.getElementById('lap-tbody').innerHTML = html;
 }
 
-// Log activity ditangani oleh backend (Apps Script)
+// ========== PRINTER BLUETOOTH ==========
+let bluetoothDevice = null;
+let bluetoothCharacteristic = null;
+
+async function connectBluetoothPrinter() {
+    try {
+        showToast('🔍 Mencari printer Bluetooth...');
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: false,
+            filters: [
+                { namePrefix: 'XPrinter' }, { namePrefix: 'BT Printer' },
+                { namePrefix: 'Thermal' }, { namePrefix: '58mm' }, { namePrefix: 'Printer' }
+            ],
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+        });
+        
+        device.addEventListener('gattserverdisconnected', onPrinterDisconnected);
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+        bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+        bluetoothDevice = device;
+        
+        document.getElementById('btnPrint').style.display = 'block';
+        document.getElementById('printerStatus').innerHTML = `✅ Printer ${device.name} siap pakai`;
+        document.getElementById('btnConnectPrinter').innerHTML = '🔌 Printer Terhubung';
+        document.getElementById('btnConnectPrinter').style.borderColor = '#3dd68c';
+        document.getElementById('btnConnectPrinter').style.color = '#3dd68c';
+        
+        showToast(`✅ Printer ${device.name} terhubung!`);
+        setTimeout(() => testPrint(), 500);
+    } catch(error) {
+        showToast('❌ Gagal konek printer: ' + error.message, true);
+        document.getElementById('printerStatus').innerHTML = '⚠️ ' + error.message;
+    }
+}
+
+function onPrinterDisconnected() {
+    showToast('⚠️ Printer terputus. Klik "Konek Printer" lagi ya!', true);
+    document.getElementById('btnPrint').style.display = 'none';
+    document.getElementById('printerStatus').innerHTML = '⚠️ Printer terputus, konek ulang';
+    document.getElementById('btnConnectPrinter').innerHTML = '🔌 Konek Printer Bluetooth';
+    document.getElementById('btnConnectPrinter').style.borderColor = '';
+    document.getElementById('btnConnectPrinter').style.color = '';
+    bluetoothCharacteristic = null;
+    bluetoothDevice = null;
+}
+
+function testPrint() {
+    if (!bluetoothCharacteristic) {
+        showToast('❌ Printer belum konek', true);
+        return;
+    }
+    const testData = [0x0A, ...strToBytes('===== TEST PRINT ====='), 0x0A, 0x0A, ...strToBytes('Printer thermal siap digunakan!'), 0x0A, 0x0A, ...strToBytes('DepotPintar - EMBUN LAWU'), 0x0A, 0x0A, 0x0A, 0x0A, 0x1D, 0x56, 0x42, 0x00];
+    sendToPrinter(new Uint8Array(testData));
+    showToast('🖨️ Test print dikirim ke printer');
+}
+
+function sendToPrinter(data) {
+    if (!bluetoothCharacteristic) throw new Error('Printer tidak terhubung');
+    return bluetoothCharacteristic.writeValue(data);
+}
+
+function strToBytes(str) {
+    const encoder = new TextEncoder();
+    return encoder.encode(str);
+}
+
+function formatRupiahPrinter(angka) {
+    if (!angka && angka !== 0) return 'Rp0';
+    return 'Rp' + angka.toLocaleString('id-ID');
+}
+
+function getLastTransactionFromDB() {
+    if (DB.transaksi && DB.transaksi.length > 0) return DB.transaksi[DB.transaksi.length - 1];
+    return null;
+}
+
+async function printStruk() {
+    if (!bluetoothCharacteristic) {
+        showToast('❌ Printer belum konek! Klik "Konek Printer Bluetooth" dulu', true);
+        return;
+    }
+    
+    const transaksi = getLastTransactionFromDB();
+    if (!transaksi) { showToast('❌ Tidak ada transaksi untuk dicetak', true); return; }
+    
+    showToast('🖨️ Mencetak struk...');
+    
+    const commands = [
+        0x1B, 0x40, 0x1B, 0x61, 0x01, 0x1D, 0x21, 0x11,
+        ...strToBytes('\n'), ...strToBytes('DEPOTPINTAR'), 0x0A,
+        0x1D, 0x21, 0x00, ...strToBytes(DB.settings?.nama_depot || 'EMBUN LAWU'), 0x0A,
+        ...strToBytes('Depot Air Minum'), 0x0A,
+        ...strToBytes('================================'), 0x0A,
+        0x1B, 0x61, 0x00
+    ];
+    
+    commands.push(...strToBytes(`Tanggal  : ${transaksi.tanggal || '-'}`)); commands.push(0x0A);
+    commands.push(...strToBytes(`Waktu    : ${new Date().toLocaleTimeString('id-ID')}`)); commands.push(0x0A);
+    commands.push(...strToBytes(`Kasir    : ${transaksi.petugas_nama || 'KHOLID'}`)); commands.push(0x0A);
+    commands.push(...strToBytes(`Pelanggan: ${transaksi.nama || 'Umum'}`)); commands.push(0x0A);
+    commands.push(...strToBytes(`Metode   : ${transaksi.bayar || 'tunai'}`)); commands.push(0x0A);
+    commands.push(...strToBytes('================================')); commands.push(0x0A);
+    
+    commands.push(0x1B, 0x45, 0x01);
+    commands.push(...strToBytes('Item              Qty  Harga    Sub')); commands.push(0x0A);
+    commands.push(0x1B, 0x45, 0x00);
+    commands.push(...strToBytes('--------------------------------')); commands.push(0x0A);
+    
+    if (transaksi.items && transaksi.items.length > 0) {
+        transaksi.items.forEach(item => {
+            const nama = (item.nama || 'Produk').slice(0, 14);
+            const qty = item.qty || 0;
+            const harga = item.harga || 0;
+            const subtotal = item.subtotal || (harga * qty);
+            commands.push(...strToBytes(`${nama.padEnd(14)} ${qty}   ${formatRupiahPrinter(harga).padEnd(8)} ${formatRupiahPrinter(subtotal)}`));
+            commands.push(0x0A);
+        });
+    }
+    
+    commands.push(...strToBytes('================================')); commands.push(0x0A);
+    const subtotal = transaksi.subtotal || transaksi.total;
+    commands.push(...strToBytes(`Subtotal   : ${formatRupiahPrinter(subtotal)}`)); commands.push(0x0A);
+    if (transaksi.ongkir && transaksi.ongkir > 0) {
+        commands.push(...strToBytes(`Ongkir     : ${formatRupiahPrinter(transaksi.ongkir)}`)); commands.push(0x0A);
+    }
+    commands.push(...strToBytes('--------------------------------')); commands.push(0x0A);
+    
+    commands.push(0x1B, 0x45, 0x01, 0x1D, 0x21, 0x11);
+    commands.push(...strToBytes(`TOTAL      : ${formatRupiahPrinter(transaksi.total)}`)); commands.push(0x0A);
+    commands.push(0x1D, 0x21, 0x00, 0x1B, 0x45, 0x00);
+    
+    if (transaksi.totalGalon && transaksi.totalGalon > 0) {
+        commands.push(...strToBytes(`Total Galon: ${transaksi.totalGalon} galon`)); commands.push(0x0A);
+    }
+    
+    commands.push(...strToBytes('================================')); commands.push(0x0A); commands.push(0x0A);
+    commands.push(0x1B, 0x61, 0x01);
+    commands.push(...strToBytes('Terima Kasih')); commands.push(0x0A);
+    commands.push(...strToBytes('Telah berbelanja di DepotPintar')); commands.push(0x0A);
+    commands.push(...strToBytes('Silahkan datang kembali')); commands.push(0x0A);
+    commands.push(0x0A, 0x0A, 0x0A, 0x0A);
+    commands.push(0x1D, 0x56, 0x42, 0x00);
+    
+    await sendToPrinter(new Uint8Array(commands));
+    showToast('✅ Struk berhasil dicetak!');
+}
+
+async function autoPrint() {
+    const autoPrintSetting = document.getElementById('autoPrintSetting');
+    if (autoPrintSetting && autoPrintSetting.checked && bluetoothCharacteristic) {
+        showToast('🖨️ Mencetak struk otomatis...');
+        setTimeout(() => printStruk(), 1000);
+    }
+}
+
+function checkBluetoothSupport() {
+    if ('bluetooth' in navigator) {
+        console.log('✅ Browser support WebBluetooth');
+        return true;
+    } else {
+        console.log('❌ Browser TIDAK support WebBluetooth');
+        const printerStatus = document.getElementById('printerStatus');
+        if (printerStatus) printerStatus.innerHTML = '⚠️ Browser tidak support WebBluetooth. Gunakan Chrome/Edge Android.';
+        const btnConnect = document.getElementById('btnConnectPrinter');
+        if (btnConnect) btnConnect.style.display = 'none';
+        return false;
+    }
+}
+
+// ========== PIN LOGIN SYSTEM (SEMENTARA DINONAKTIFKAN) ==========
+// Aplikasi langsung terbuka tanpa PIN
+
+function pinInput(num) {
+    // Fungsi kosong, PIN dinonaktifkan
+}
+
+function pinDelete() {
+    // Fungsi kosong, PIN dinonaktifkan
+}
+
+function pinLogin() {
+    // Fungsi kosong, PIN dinonaktifkan
+}
+
+function setupNewPIN() {
+    // Fungsi kosong, PIN dinonaktifkan
+}
+
+function gantiPIN() {
+    // Fungsi kosong, PIN dinonaktifkan
+}
+
+function checkPINOnLoad() {
+    // PIN dinonaktifkan, langsung buka aplikasi
+    document.getElementById('pinPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    loadAllData();
+    checkBluetoothSupport();
+}
+
 // ========== PAGE NAVIGATION ==========
 function showPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const activePage = document.getElementById(`page-${page}`);
-    if (activePage) activePage.classList.add('active');
-    
+    document.getElementById(`page-${page}`).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
+    if (event && event.target) event.target.classList.add('active');
     
     if (page === 'dashboard') renderDashboard();
     if (page === 'pelanggan') renderPelanggan();
@@ -1481,7 +1499,7 @@ function showPage(page) {
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
-    loadAllData();
+    checkPINOnLoad();
     
     document.addEventListener('click', (e) => {
         const sidebar = document.getElementById('sidebar');
