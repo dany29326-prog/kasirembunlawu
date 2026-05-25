@@ -1558,11 +1558,21 @@ function gantiPIN() {
 
 // Cek saat halaman dimuat
 function checkPINOnLoad() {
-    // LANGSUNG BUKA APLIKASI
-    document.getElementById('pinPage').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    loadAllData();
-    checkBluetoothSupport();
+    const savedPIN = localStorage.getItem('depotpintar_pin');
+    
+    if (savedPIN && savedPIN.length >= 4) {
+        // PIN sudah ada, tampilkan halaman login PIN
+        document.getElementById('pinPage').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('pinInput').value = '';
+        pendingPIN = '';
+    } else {
+        // Belum ada PIN, tampilkan halaman PIN untuk buat PIN baru
+        document.getElementById('pinPage').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('pinInput').value = '';
+        pendingPIN = '';
+    }
 }
 
 // ========== PAGE NAVIGATION ==========
