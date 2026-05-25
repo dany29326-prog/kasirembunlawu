@@ -1502,7 +1502,7 @@ function pinDelete() {
 
 // Proses login
 function pinLogin() {
-    console.log('pinLogin called, pendingPIN:', pendingPIN, 'type:', typeof pendingPIN);
+    console.log('pinLogin called, pendingPIN:', JSON.stringify(pendingPIN), 'type:', typeof pendingPIN);
     
     // Jika belum ada PIN
     if (!isPINSet()) {
@@ -1520,14 +1520,18 @@ function pinLogin() {
     
     // Jika sudah ada PIN, cek kecocokan
     const savedPIN = getPIN();
-    console.log('Saved PIN:', savedPIN, 'type:', typeof savedPIN);
-    console.log('Pending PIN:', pendingPIN, 'type:', typeof pendingPIN);
+    console.log('Saved PIN:', JSON.stringify(savedPIN), 'type:', typeof savedPIN);
+    console.log('Pending PIN:', JSON.stringify(pendingPIN), 'type:', typeof pendingPIN);
     console.log('Comparison:', pendingPIN === savedPIN);
     
-    if (pendingPIN === savedPIN) {
+    // Bersihkan whitespace dan bandingkan
+    const pendingTrimmed = pendingPIN.trim();
+    const savedTrimmed = savedPIN.trim();
+    
+    if (pendingTrimmed === savedTrimmed) {
         showMainApp();
     } else {
-        alert('❌ PIN salah! Coba lagi.\n\nPIN yang diketik: ' + pendingPIN + '\nPIN tersimpan: ' + savedPIN);
+        alert('❌ PIN salah! Coba lagi.\n\nPIN yang diketik: "' + pendingPIN + '"\nPIN tersimpan: "' + savedPIN + '"');
         pendingPIN = '';
         document.getElementById('pinInput').value = '';
     }
