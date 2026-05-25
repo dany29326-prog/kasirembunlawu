@@ -1453,35 +1453,118 @@ function checkBluetoothSupport() {
     }
 }
 
-// ========== PIN LOGIN SYSTEM (SEMENTARA DINONAKTIFKAN) ==========
-// Aplikasi langsung terbuka tanpa PIN
+// ========== PIN LOGIN SYSTEM (VERSI SEDERHANA) ==========
+let pendingPIN = '';
 
-function pinInput(num) {
-    // Fungsi kosong, PIN dinonaktifkan
+// Cek apakah PIN sudah dibuat
+function isPINSet() {
+    const pin = localStorage.getItem('depotpintar_pin');
+    return pin && pin.length >= 4;
 }
 
-function pinDelete() {
-    // Fungsi kosong, PIN dinonaktifkan
+// Simpan PIN
+function savePIN(pin) {
+    localStorage.setItem('depotpintar_pin', pin);
 }
 
-function pinLogin() {
-    // Fungsi kosong, PIN dinonaktifkan
+// Ambil PIN yang tersimpan
+function getPIN() {
+    return localStorage.getItem('depotpintar_pin');
 }
 
-function setupNewPIN() {
-    // Fungsi kosong, PIN dinonaktifkan
+// Halaman PIN
+function showPINPage() {
+    document.getElementById('pinPage').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('pinInput').value = '';
+    pendingPIN = '';
 }
 
-function gantiPIN() {
-    // Fungsi kosong, PIN dinonaktifkan
-}
-
-function checkPINOnLoad() {
-    // PIN dinonaktifkan, langsung buka aplikasi
+// Halaman utama
+function showMainApp() {
     document.getElementById('pinPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     loadAllData();
     checkBluetoothSupport();
+}
+
+// Tombol angka PIN
+function pinInput(num) {
+    if (pendingPIN.length >= 6) return;
+    pendingPIN += num;
+    document.getElementById('pinInput').value = '*'.repeat(pendingPIN.length);
+}
+
+function pinDelete() {
+    pendingPIN = pendingPIN.slice(0, -1);
+    document.getElementById('pinInput').value = '*'.repeat(pendingPIN.length);
+}
+
+// Proses login
+function pinLogin() {
+    // Jika belum ada PIN
+    if (!isPINSet()) {
+        // Tidak ada PIN, buat PIN baru
+        if (pendingPIN.length < 4) {
+            alert('PIN minimal 4 digit!');
+            return;
+        }
+        savePIN(pendingPIN);
+        alert('PIN berhasil dibuat!');
+        showMainApp();
+        return;
+    }
+    
+    // Jika sudah ada PIN, cek kecocokan
+    if (pendingPIN === getPIN()) {
+        showMainApp();
+    } else {
+        alert('PIN salah! Coba lagi.');
+        pendingPIN = '';
+        document.getElementById('pinInput').value = '';
+    }
+}
+
+// Setup PIN baru (dari menu pengaturan)
+function setupNewPIN() {
+    const currentPIN = getPIN();
+    if (currentPIN) {
+        const oldPIN = prompt('Masukkan PIN lama:');
+        if (oldPIN !== currentPIN) {
+            alert('PIN lama salah!');
+            return;
+        }
+    }
+    
+    const newPIN = prompt('Buat PIN baru (4-6 digit angka):');
+    if (!newPIN) return;
+    if (newPIN.length < 4) {
+        alert('PIN minimal 4 digit!');
+        return;
+    }
+    if (!/^\d+$/.test(newPIN)) {
+        alert('PIN harus angka saja!');
+        return;
+    }
+    
+    savePIN(newPIN);
+    alert('PIN berhasil diganti!');
+}
+
+// Ganti PIN (dari menu pengaturan)
+function gantiPIN() {
+    setupNewPIN();
+}
+
+// Cek saat halaman dimuat
+function checkPINOnLoad() {
+    if (isPINSet()) {
+        // Sudah ada PIN, tampilkan halaman login
+        showPINPage();
+    } else {
+        // Belum ada PIN, langsung buat PIN (tanpa login dulu)
+        showPINPage();
+    }
 }
 
 // ========== PAGE NAVIGATION ==========
