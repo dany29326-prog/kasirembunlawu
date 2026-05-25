@@ -1558,13 +1558,11 @@ function gantiPIN() {
 
 // Cek saat halaman dimuat
 function checkPINOnLoad() {
-    if (isPINSet()) {
-        // Sudah ada PIN, tampilkan halaman login
-        showPINPage();
-    } else {
-        // Belum ada PIN, langsung buat PIN (tanpa login dulu)
-        showPINPage();
-    }
+    // LANGSUNG BUKA APLIKASI
+    document.getElementById('pinPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    loadAllData();
+    checkBluetoothSupport();
 }
 
 // ========== PAGE NAVIGATION ==========
