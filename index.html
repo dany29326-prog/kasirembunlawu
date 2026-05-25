@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AquaPos - Depot Air Minum EMBUN LAWU</title>
+    <title>DepotPintar - Depot Air Minum EMBUN LAWU</title>
     <style>
         * {
             margin: 0;
@@ -465,7 +465,7 @@
 
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <h1>💧 AquaPos</h1>
+        <h1>💧 DepotPintar</h1>
         <div class="sub" id="namaDepot">EMBUN LAWU</div>
     </div>
     <nav>
@@ -702,7 +702,7 @@ function testPrint() {
         0x0A, 0x0A,
         ...strToBytes('Printer thermal siap digunakan!'),
         0x0A, 0x0A,
-        ...strToBytes('AquaPos - EMBUN LAWU'),
+        ...strToBytes('DepotPintar - EMBUN LAWU'),
         0x0A, 0x0A, 0x0A, 0x0A,
         0x1D, 0x56, 0x42, 0x00
     ];
@@ -758,7 +758,7 @@ async function printStruk() {
         0x1B, 0x61, 0x01,     // Center align
         0x1D, 0x21, 0x11,     // Font besar + tebal
         ...strToBytes('\n'),
-        ...strToBytes('AQUAPOS'),
+        ...strToBytes('DEPOTPINTAR'),
         0x0A,
         0x1D, 0x21, 0x00,     // Font normal
         ...strToBytes(DB.settings?.nama_depot || 'EMBUN LAWU'),
@@ -842,11 +842,11 @@ async function printStruk() {
     
     // Footer
     commands.push(0x1B, 0x61, 0x01);  // Center align
-    commands.push(...strToBytes('Terima Kasih!'));
+    commands.push(...strToBytes('Terima Kasih'));
     commands.push(0x0A);
-    commands.push(...strToBytes('~ Semoga Sehat Selalu ~'));
+    commands.push(...strToBytes('Telah berbelanja di DepotPintar'));
     commands.push(0x0A);
-    commands.push(...strToBytes('~ Silahkan datang kembali ~'));
+    commands.push(...strToBytes('Silahkan datang kembali'));
     commands.push(0x0A);
     commands.push(0x0A);
     commands.push(0x0A);
