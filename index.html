@@ -78,6 +78,160 @@
         .label-ongkir { color: #7d8590; font-size: 13px; margin-bottom: 5px; }
         .inline-input { display: flex; gap: 10px; align-items: flex-end; }
         .inline-input .input-group { flex: 1; }
+
+        /* Modal Struk Belanja Premium */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            width: 90%;
+            max-width: 420px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: modalFadeIn 0.2s ease;
+        }
+        @keyframes modalFadeIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            font-size: 16px;
+            color: #00e5c0;
+        }
+        .modal-body {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .receipt-card {
+            background: #0d1117;
+            border: 1px dashed #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: #e6edf3;
+            line-height: 1.4;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #30363d;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        .receipt-divider {
+            border-top: 1px dashed #30363d;
+            margin: 6px 0;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-modal {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .btn-modal-primary {
+            background: #00e5c0;
+            color: #0d1117;
+        }
+        .btn-modal-primary:hover {
+            background: #00c4a3;
+        }
+        .btn-modal-secondary {
+            background: #1c2330;
+            color: white;
+            border: 1px solid #30363d;
+        }
+        .btn-modal-secondary:hover {
+            background: #30363d;
+        }
+        .btn-modal-danger {
+            background: #f05c5c;
+            color: white;
+        }
+        .btn-modal-danger:hover {
+            background: #d04c4c;
+        }
+        
+        /* Stylesheet Khusus Cetak Nota Thermal 58mm */
+        @media print {
+            body * {
+                display: none !important;
+            }
+            #receiptModal, #receiptModal *, .print-area, .print-area * {
+                display: block !important;
+            }
+            #receiptModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                color: black !important;
+            }
+            .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 58mm !important;
+                max-width: 58mm !important;
+            }
+            .modal-header, .modal-footer, .menu-toggle, .sidebar {
+                display: none !important;
+            }
+            .receipt-card {
+                background: white !important;
+                color: black !important;
+                border: none !important;
+                padding: 0 !important;
+                font-size: 11px !important;
+                width: 58mm !important;
+            }
+            .receipt-divider {
+                border-top: 1px dashed black !important;
+            }
+            .receipt-card * {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -159,6 +313,27 @@
         </div>
     </div>
 </main>
+
+<!-- Modal Struk Nota Belanja -->
+<div id="receiptModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🧾 Struk Pembayaran</h2>
+            <button onclick="tutupModalNota()" style="background:transparent; border:none; color:#7d8590; font-size:20px; cursor:pointer; font-weight:bold;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="receipt-card print-area" id="receipt-card-content">
+                <!-- Konten dinamis struk akan digenerate oleh JS -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-secondary" onclick="cetakNota()">🖨️ Cetak Nota</button>
+            <button class="btn-modal btn-modal-primary" onclick="kirimNotaWA()">📱 Kirim WA</button>
+            <button class="btn-modal btn-modal-danger" onclick="tutupModalNota()">❌ Tutup</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyH3Mc4K1NVDx9CHVLyDdxPKY2SHirjjVPI_mtOnBDohTXYB3XxC_AMWG6VDK3go7EFqg/exec';
@@ -187,6 +362,7 @@ let currentPetugas = null;
 let isLoading = false;
 let ongkir = 0;
 let isProcessing = false;
+let lastTransactionForReceipt = null;
 
 function formatRupiah(angka) {
     if (!angka && angka !== 0) return 'Rp0';
@@ -363,17 +539,22 @@ async function prosesTransaksi() {
             cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0;
             renderProdukGrid(); document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = '';
             loadAllData();
+            tampilkanStruk(trx);
         } else {
             let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
             offlineTrx.push(trx); localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
             showToast('⚠️ Tersimpan offline', true);
             cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0; renderProdukGrid();
+            document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = '';
+            tampilkanStruk(trx);
         }
     } catch(e) {
         let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
         offlineTrx.push(trx); localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
         showToast('⚠️ Tersimpan offline', true);
         cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0; renderProdukGrid();
+        document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = '';
+        tampilkanStruk(trx);
     }
     isProcessing = false;
     if (btnBayar) { btnBayar.disabled = false; btnBayar.style.opacity = '1'; btnBayar.innerText = '✅ BAYAR SEKARANG'; }
@@ -482,17 +663,142 @@ function renderHutang() {
     
     let html = '';
     if (Object.keys(byName).length === 0) {
-        html = '<div style="color:#3dd68c;">✅ Semua hutang sudah lunas</div>';
+        html = '<div style="color:#3dd68c; text-align:center; padding:15px;">✅ Semua hutang sudah lunas</div>';
     } else {
         Object.entries(byName).forEach(([nama, total]) => {
             html += `<div style="padding:10px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between; align-items:center;">
                         <div><strong>${nama}</strong><br><span style="font-size:12px; color:#7d8590;">Total hutang</span></div>
-                        <div style="color:#f0a050;">${formatRupiah(total)}</div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="color:#f0a050; font-weight:bold;">${formatRupiah(total)}</span>
+                            <button class="btn-modal btn-modal-primary" style="padding:6px 12px; font-size:12px; flex:none; margin:0;" onclick="prosesPelunasanHutang('${nama.replace(/'/g, "\\'")}', ${total})">💳 Pelunasan</button>
+                        </div>
                     </div>`;
         });
     }
     const hutangListEl = document.getElementById('hutang-list');
     if (hutangListEl) hutangListEl.innerHTML = html;
+}
+
+async function prosesPelunasanHutang(nama, total) {
+    if (!confirm(`⚠️ Konfirmasi Pelunasan Hutang?\n👤 Pelanggan: ${nama}\n💰 Total Hutang: ${formatRupiah(total)}\n\nApakah pelanggan ini sudah membayar lunas hutangnya?`)) return;
+    
+    showToast('💾 Memproses pelunasan...');
+    try {
+        const res = await callAPI('payDebt', { action: 'payDebt', nama: nama });
+        if (res.status === 'ok') {
+            showToast('✅ Hutang berhasil dilunasi!');
+            loadAllData();
+        } else {
+            showToast('❌ Gagal melunasi: ' + res.message, true);
+        }
+    } catch(e) {
+        showToast('❌ Gagal melunasi: ' + e.message, true);
+    }
+}
+
+function tampilkanStruk(trx) {
+    lastTransactionForReceipt = trx;
+    const card = document.getElementById('receipt-card-content');
+    if (!card) return;
+    
+    let itemsHtml = '';
+    trx.items.forEach(i => {
+        itemsHtml += `<div class="receipt-row"><span>${i.icon || '💧'} ${i.nama} x${i.qty}</span><span>${formatRupiah(i.subtotal)}</span></div>`;
+    });
+    
+    const tglJam = new Date(trx.waktu).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    
+    card.innerHTML = `
+        <div class="receipt-header">
+            <h3 style="margin: 0; color: #00e5c0; font-size: 16px;">💧 DepotPintar</h3>
+            <div style="font-size: 11px; margin-top: 3px;">EMBUN LAWU</div>
+            <div style="font-size: 10px; color: #7d8590;">Blumbang, Tawangmangu</div>
+        </div>
+        <div style="font-size: 11px; margin-bottom: 8px;">
+            <div class="receipt-row"><span>ID Transaksi:</span><span>${trx.id}</span></div>
+            <div class="receipt-row"><span>Waktu:</span><span>${tglJam}</span></div>
+            <div class="receipt-row"><span>Petugas:</span><span>${trx.petugas_nama}</span></div>
+            <div class="receipt-row"><span>Pelanggan:</span><span>${trx.nama}</span></div>
+        </div>
+        <div class="receipt-divider"></div>
+        <div>
+            ${itemsHtml}
+        </div>
+        <div class="receipt-divider"></div>
+        <div style="font-size: 12px;">
+            <div class="receipt-row"><span>Subtotal:</span><span>${formatRupiah(trx.subtotal)}</span></div>
+            ${trx.ongkir > 0 ? `<div class="receipt-row"><span>Ongkir:</span><span>${formatRupiah(trx.ongkir)}</span></div>` : ''}
+            <div class="receipt-row" style="font-weight: bold; color: #00e5c0; font-size: 14px;"><span>TOTAL:</span><span>${formatRupiah(trx.total)}</span></div>
+        </div>
+        <div class="receipt-divider"></div>
+        <div style="font-size: 11px;">
+            <div class="receipt-row"><span>Metode Bayar:</span><span style="text-transform: uppercase; font-weight: bold;">${trx.bayar}</span></div>
+            <div class="receipt-row"><span>Status:</span><span style="font-weight: bold; color: ${trx.status === 'lunas' ? '#3dd68c' : '#f0a050'};">${trx.status === 'lunas' ? 'LUNAS' : 'HUTANG'}</span></div>
+        </div>
+        <div class="receipt-divider"></div>
+        <div style="text-align: center; font-size: 10px; margin-top: 8px; color: #7d8590;">
+            *** Terima Kasih ***<br>
+            Semoga Sehat Selalu
+        </div>
+    `;
+    
+    const modal = document.getElementById('receiptModal');
+    if (modal) modal.classList.add('show');
+}
+
+function tutupModalNota() {
+    const modal = document.getElementById('receiptModal');
+    if (modal) modal.classList.remove('show');
+    lastTransactionForReceipt = null;
+}
+
+function cetakNota() {
+    window.print();
+}
+
+function kirimNotaWA() {
+    if (!lastTransactionForReceipt) return;
+    const trx = lastTransactionForReceipt;
+    
+    let phone = trx.wa ? trx.wa.replace(/[^0-9]/g, '') : '';
+    if (phone) {
+        if (phone.startsWith('0')) {
+            phone = '62' + phone.slice(1);
+        } else if (phone.startsWith('8')) {
+            phone = '62' + phone;
+        }
+    } else {
+        showToast('⚠️ Nomor WA pelanggan tidak tersedia!', true);
+        return;
+    }
+    
+    let itemsText = '';
+    trx.items.forEach(i => {
+        itemsText += `• ${i.icon || '💧'} ${i.nama} (x${i.qty}): ${formatRupiah(i.subtotal)}\n`;
+    });
+    
+    const statusText = trx.status === 'lunas' ? '✅ LUNAS' : '📒 HUTANG';
+    
+    const message = `*🧾 NOTA PEMBAYARAN DEPOT PINTAR*
+*Depot Air Minum EMBUN LAWU*
+--------------------------------------------
+*ID Transaksi :* ${trx.id}
+*Tanggal      :* ${new Date(trx.waktu).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+*Petugas      :* ${trx.petugas_nama}
+*Pelanggan    :* ${trx.nama}
+--------------------------------------------
+${itemsText}
+--------------------------------------------
+*Subtotal     :* ${formatRupiah(trx.subtotal)}
+${trx.ongkir > 0 ? `*Ongkir       :* ${formatRupiah(trx.ongkir)}\n` : ''}*TOTAL        :* *${formatRupiah(trx.total)}*
+*Metode Bayar :* ${trx.bayar.toUpperCase()}
+*Status       :* *${statusText}*
+
+Terima kasih atas kunjungan Anda. Semoga sehat selalu! 💧✨`;
+
+    const encodedText = encodeURIComponent(message);
+    const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedText}`;
+    window.open(waUrl, '_blank');
 }
 
 function renderLaporan(transactionsToRender) {

@@ -1,0 +1,521 @@
+// ========== AQUAPOS - BACKEND APPS SCRIPT (FULLY FIXED) ==========
+const SHEET_ID = '1n9QiPVnRDTPtzHZGWyOebEEQ4xe0K4eGt-n-MEOJWxo';
+
+// ========== DO GET (UNTUK MEMBACA DATA) ==========
+function doGet(e) {
+  const action = e?.parameter?.action || '';
+  const callback = e?.parameter?.callback || '';
+  
+  let result;
+  
+  if (action === 'getAllData') {
+    result = getAllDataResponse();
+  } else {
+    result = {
+      status: 'ok',
+      message: 'API berjalan',
+      produk: getProdukDariSheet(),
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  // JSONP untuk CORS
+  if (callback) {
+    return ContentService.createTextOutput(`${callback}(${JSON.stringify(result)})`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ========== DO POST (UNTUK MENYIMPAN DATA) ==========
+function doPost(e) {
+  const output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+  
+  try {
+    let data = {};
+    
+    if (e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.data) {
+      data = JSON.parse(e.parameter.data);
+    } else if (e.parameter) {
+      data = e.parameter;
+    }
+    
+    const action = data.action;
+    
+    // Catat aktivitas ke log
+    logActivity('POST_REQUEST', action, JSON.stringify(data).substring(0, 200));
+    
+    if (action === 'saveTransaction') {
+      const result = saveTransaction(data.transaction);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'payDebt') {
+      const result = payDebt(data.nama);
+      output.setContent(JSON.stringify(result));
+    } else {
+      output.setContent(JSON.stringify({ status: 'ok', message: 'API ready' }));
+    }
+    
+  } catch(error) {
+    logActivity('ERROR', 'doPost', error.toString());
+    output.setContent(JSON.stringify({ status: 'error', message: error.toString() }));
+  }
+  
+  return output;
+}
+
+// ========== BACA PRODUK DARI SHEET ==========
+function getProdukDariSheet() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('produk');
+    
+    if (!sheet) return [];
+    
+    const rows = sheet.getDataRange().getValues();
+    const produk = [];
+    
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[0] && row[0].toString().trim() !== '') {
+        produk.push({
+          id: row[0].toString(),
+          nama: row[1] || 'Produk',
+          icon: row[2] || '💧',
+          satuan: row[3] || 'galon',
+          harga_beli: Number(row[4]) || 0,
+          harga: Number(row[5]) || 0,
+          stok: Number(row[6]) || 0,
+          is_active: row[7] === true || row[7] === 'TRUE' || row[7] === 'True'
+        });
+      }
+    }
+    
+    return produk;
+  } catch(e) {
+    logActivity('ERROR', 'getProdukDariSheet', e.toString());
+    return [];
+  }
+}
+
+// ========== BACA SEMUA DATA UNTUK DASHBOARD ==========
+function getAllDataResponse() {
+  const produk = getProdukDariSheet();
+  let transaksi = [];
+  let pelanggan = [];
+  
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const trxSheet = ss.getSheetByName('transaksi');
+    
+    if (trxSheet) {
+      const trxRows = trxSheet.getDataRange().getValues();
+      
+      // Header: 0=id,1=tanggal,2=waktu,3=petugas_id,4=petugas_nama,
+      // 5=nama_pelanggan,6=wa,7=items,8=ongkir,9=subtotal,10=total,
+      // 11=bayar,12=status,13=catatan,14=hutang_lunas,15=total_galon
+      
+      for (let i = 1; i < trxRows.length; i++) {
+        const row = trxRows[i];
+        if (row[0] && row[0].toString().trim() !== '') {
+          
+          let items = [];
+          try {
+            if (row[7] && typeof row[7] === 'string') {
+              items = JSON.parse(row[7]);
+            } else if (row[7]) {
+              items = row[7];
+            }
+          } catch(e) {
+            items = [];
+          }
+          
+          // Ambil tanggal dalam format YYYY-MM-DD
+          let tanggal = '';
+          if (row[1]) {
+            tanggal = row[1].toString();
+            if (tanggal.includes('T')) {
+              tanggal = tanggal.split('T')[0];
+            }
+          }
+          
+          transaksi.push({
+            id: row[0].toString(),
+            tanggal: tanggal,
+            waktu: row[2] ? row[2].toString() : '',
+            petugas_id: row[3] ? row[3].toString() : '',
+            petugas_nama: row[4] ? row[4].toString() : '',
+            nama: row[5] ? row[5].toString() : 'Umum',
+            wa: row[6] ? row[6].toString() : '',
+            items: items,
+            ongkir: Number(row[8]) || 0,
+            subtotal: Number(row[9]) || 0,
+            total: Number(row[10]) || 0,
+            bayar: row[11] ? row[11].toString() : 'tunai',
+            status: row[12] ? row[12].toString() : 'lunas',
+            catatan: row[13] ? row[13].toString() : '',
+            hutangLunas: row[14] === 'TRUE' || row[14] === true,
+            totalGalon: Number(row[15]) || 0
+          });
+        }
+      }
+    }
+    
+    // Hitung pelanggan unik
+    const pelangganMap = new Map();
+    transaksi.forEach(t => {
+      const namaPelanggan = t.nama || 'Umum';
+      if (!pelangganMap.has(namaPelanggan)) {
+        pelangganMap.set(namaPelanggan, {
+          nama: namaPelanggan,
+          wa: t.wa || '',
+          total_order: 0,
+          hutang: 0
+        });
+      }
+      const p = pelangganMap.get(namaPelanggan);
+      p.total_order += t.total;
+      if (t.status === 'hutang' && !t.hutangLunas) {
+        p.hutang += t.total;
+      }
+    });
+    pelanggan = Array.from(pelangganMap.values());
+    
+    logActivity('READ_DATA', 'getAllDataResponse', 'Berhasil baca ' + transaksi.length + ' transaksi');
+    
+  } catch(e) {
+    logActivity('ERROR', 'getAllDataResponse', e.toString());
+  }
+  
+  // Baca settings dari sheet settings
+  let settings = { nama_depot: 'EMBUN LAWU', alamat: 'Blumbang, Tawangmangu' };
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const settingsSheet = ss.getSheetByName('settings');
+    if (settingsSheet) {
+      const data = settingsSheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const key = data[i][0];
+        const value = data[i][1];
+        if (key && value) {
+          settings[key] = value;
+        }
+      }
+    }
+  } catch(e) {}
+  
+  return {
+    status: 'ok',
+    data: {
+      produk: produk,
+      settings: settings,
+      pelanggan: pelanggan,
+      transaksi: transaksi,
+      petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]
+    }
+  };
+}
+
+// ========== SIMPAN TRANSAKSI ==========
+function saveTransaction(trx) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('transaksi');
+    
+    // Buat sheet dengan header yang benar jika belum ada
+    if (!sheet) {
+      sheet = ss.insertSheet('transaksi');
+      sheet.appendRow([
+        'id', 'tanggal', 'waktu', 'petugas_id', 'petugas_nama', 
+        'nama_pelanggan', 'wa', 'items', 'ongkir', 'subtotal', 
+        'total', 'bayar', 'status', 'catatan', 'hutang_lunas', 'total_galon'
+      ]);
+      logActivity('CREATE_SHEET', 'transaksi', 'Membuat sheet transaksi baru');
+    } else {
+      // Perbaiki header jika masih salah
+      const headerRow = sheet.getRange(1, 1, 1, 16).getValues()[0];
+      if (headerRow[4] !== 'petugas_nama' || headerRow[5] !== 'nama_pelanggan') {
+        sheet.getRange(1, 1, 1, 16).setValues([[
+          'id', 'tanggal', 'waktu', 'petugas_id', 'petugas_nama', 
+          'nama_pelanggan', 'wa', 'items', 'ongkir', 'subtotal', 
+          'total', 'bayar', 'status', 'catatan', 'hutang_lunas', 'total_galon'
+        ]]);
+        logActivity('FIX_HEADER', 'transaksi', 'Memperbaiki header sheet');
+      }
+    }
+    
+    // ========== HITUNG TOTAL GALON ==========
+    let totalGalon = 0;
+    
+    if (trx.items && Array.isArray(trx.items)) {
+      for (let i = 0; i < trx.items.length; i++) {
+        const item = trx.items[i];
+        if (item.satuan && item.satuan.toLowerCase() === 'galon') {
+          const qty = item.qty || 0;
+          totalGalon += qty;
+        }
+      }
+    }
+    
+    // Format tanggal
+    let tanggal = trx.tanggal;
+    if (tanggal && tanggal.includes('T')) {
+      tanggal = tanggal.split('T')[0];
+    }
+    
+    // Data yang akan disimpan
+    const rowData = [
+      trx.id || 'TRX_' + Date.now(),
+      tanggal || new Date().toISOString().slice(0, 10),
+      trx.waktu || new Date().toISOString(),
+      trx.petugas_id || 'P001',
+      trx.petugas_nama || 'KHOLID',
+      trx.nama || 'Umum',
+      trx.wa || '',
+      JSON.stringify(trx.items || []),
+      trx.ongkir || 0,
+      trx.subtotal || trx.total || 0,
+      trx.total || 0,
+      trx.bayar || 'tunai',
+      trx.status || (trx.bayar === 'hutang' ? 'hutang' : 'lunas'),
+      trx.catatan || '',
+      trx.hutangLunas ? 'TRUE' : 'FALSE',
+      totalGalon
+    ];
+    
+    sheet.appendRow(rowData);
+    
+    // Catat ke log aktivitas
+    logActivity('SAVE_TRANSACTION', trx.id, 
+      'Pelanggan: ' + (trx.nama || 'Umum') + 
+      ', Total: Rp' + (trx.total || 0) + 
+      ', Galon: ' + totalGalon);
+    
+    // Update backup_meta (terakhir transaksi)
+    updateBackupMeta('last_transaction', new Date().toISOString());
+    
+    return {
+      status: 'ok',
+      message: 'Transaksi tersimpan',
+      id: trx.id,
+      totalGalon: totalGalon
+    };
+    
+  } catch(e) {
+    logActivity('ERROR', 'saveTransaction', e.toString());
+    return {
+      status: 'error',
+      message: e.toString()
+    };
+  }
+}
+
+// ========== LOG AKTIVITAS ==========
+function logActivity(type, action, detail) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('log_aktivitas');
+    
+    // Buat sheet jika belum ada
+    if (!sheet) {
+      sheet = ss.insertSheet('log_aktivitas');
+      sheet.appendRow(['timestamp', 'type', 'action', 'detail', 'user']);
+    }
+    
+    sheet.appendRow([
+      new Date().toISOString(),
+      type,
+      action,
+      detail,
+      Session.getActiveUser().getEmail() || 'system'
+    ]);
+    
+  } catch(e) {
+    // Abaikan error log, jangan sampai mengganggu transaksi utama
+  }
+}
+
+// ========== UPDATE BACKUP META ==========
+function updateBackupMeta(key, value) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('backup_meta');
+    
+    // Buat sheet jika belum ada
+    if (!sheet) {
+      sheet = ss.insertSheet('backup_meta');
+      sheet.appendRow(['key', 'value', 'last_updated']);
+    }
+    
+    // Cari dan update atau tambah baru
+    const data = sheet.getDataRange().getValues();
+    let found = false;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === key) {
+        sheet.getRange(i + 1, 2).setValue(value);
+        sheet.getRange(i + 1, 3).setValue(new Date().toISOString());
+        found = true;
+        break;
+      }
+    }
+    
+    if (!found) {
+      sheet.appendRow([key, value, new Date().toISOString()]);
+    }
+    
+  } catch(e) {
+    // Abaikan error
+  }
+}
+
+// ========== FUNGSI BANTUAN (DEBUG) ==========
+
+// Fungsi untuk memperbaiki data transaksi yang sudah ada
+function fixExistingGalonData() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName('transaksi');
+  
+  if (!sheet) {
+    return { status: 'error', message: 'Sheet transaksi tidak ditemukan' };
+  }
+  
+  // Perbaiki header
+  sheet.getRange(1, 1, 1, 16).setValues([[
+    'id', 'tanggal', 'waktu', 'petugas_id', 'petugas_nama', 
+    'nama_pelanggan', 'wa', 'items', 'ongkir', 'subtotal', 
+    'total', 'bayar', 'status', 'catatan', 'hutang_lunas', 'total_galon'
+  ]]);
+  
+  const data = sheet.getDataRange().getValues();
+  let fixedCount = 0;
+  let totalGalonAll = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    let totalGalon = 0;
+    
+    if (row[7]) {
+      try {
+        let items = [];
+        if (typeof row[7] === 'string') {
+          items = JSON.parse(row[7]);
+        } else if (Array.isArray(row[7])) {
+          items = row[7];
+        }
+        
+        for (let j = 0; j < items.length; j++) {
+          const item = items[j];
+          if (item.satuan && item.satuan.toLowerCase() === 'galon') {
+            totalGalon += item.qty || 0;
+          }
+        }
+        
+        if (totalGalon > 0 || row[15] != totalGalon) {
+          sheet.getRange(i + 1, 16).setValue(totalGalon);
+          fixedCount++;
+          totalGalonAll += totalGalon;
+        }
+      } catch(e) {}
+    }
+  }
+  
+  logActivity('FIX_DATA', 'fixExistingGalonData', 'Memperbaiki ' + fixedCount + ' transaksi, total ' + totalGalonAll + ' galon');
+  
+  return { 
+    status: 'ok', 
+    fixed: fixedCount,
+    totalGalon: totalGalonAll
+  };
+}
+
+// Fungsi untuk cek isi sheet
+function checkSheetData() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheets = ss.getSheets();
+  const result = {
+    sheets: sheets.map(s => s.getName()),
+    transaksi: { count: 0, lastRow: null },
+    produk: { count: 0 }
+  };
+  
+  const trxSheet = ss.getSheetByName('transaksi');
+  if (trxSheet) {
+    const data = trxSheet.getDataRange().getValues();
+    result.transaksi.count = data.length - 1;
+    if (data.length > 1) {
+      result.transaksi.lastRow = data[data.length - 1];
+    }
+  }
+  
+  const produkSheet = ss.getSheetByName('produk');
+  if (produkSheet) {
+    const data = produkSheet.getDataRange().getValues();
+    result.produk.count = data.length - 1;
+  }
+  
+  return result;
+}
+
+// Backup otomatis (bisa dijadikan trigger waktu)
+function createBackup() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const backupName = 'backup_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const backup = SpreadsheetApp.create(backupName);
+    
+    // Copy semua sheet
+    const sheets = ss.getSheets();
+    sheets.forEach(sheet => {
+      const sheetName = sheet.getName();
+      const newSheet = backup.insertSheet(sheetName);
+      const data = sheet.getDataRange().getValues();
+      newSheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+    });
+    
+    // Update meta backup
+    updateBackupMeta('last_backup', new Date().toISOString());
+    updateBackupMeta('last_backup_file', backup.getUrl());
+    
+    logActivity('BACKUP', 'createBackup', 'Backup created: ' + backup.getUrl());
+    
+    return { status: 'ok', url: backup.getUrl() };
+  } catch(e) {
+    logActivity('ERROR', 'createBackup', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== PELUNASAN HUTANG PELANGGAN ==========
+function payDebt(nama) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('transaksi');
+    if (!sheet) return { status: 'error', message: 'Sheet transaksi tidak ditemukan' };
+    
+    const rows = sheet.getDataRange().getValues();
+    let updatedCount = 0;
+    
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      // Kolom 5 = nama_pelanggan, Kolom 12 = status, Kolom 14 = hutang_lunas
+      if (row[5] === nama && row[12] === 'hutang' && (row[14] === 'FALSE' || row[14] === false || !row[14])) {
+        // Update kolom status ke 'lunas' (Kolom 13, Indeks ke-13)
+        sheet.getRange(i + 1, 13).setValue('lunas');
+        // Update kolom hutang_lunas ke TRUE (Kolom 15, Indeks ke-15)
+        sheet.getRange(i + 1, 15).setValue('TRUE');
+        updatedCount++;
+      }
+    }
+    
+    logActivity('PAY_DEBT', nama, 'Berhasil melunasi ' + updatedCount + ' transaksi hutang');
+    return { status: 'ok', message: 'Sukses melunasi ' + updatedCount + ' transaksi hutang', count: updatedCount };
+  } catch(e) {
+    logActivity('ERROR', 'payDebt', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
