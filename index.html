@@ -584,6 +584,20 @@ index.html
     <div id="page-laporan" class="page">
         <div class="card">
             <div class="card-title">📈 Laporan Transaksi</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+                <div style="flex:1; min-width:120px;">
+                    <label style="font-size:12px; color:#7d8590; display:block; margin-bottom:4px;">Dari Tanggal</label>
+                    <input type="date" id="lap-tgl-dari" style="margin-bottom:0;">
+                </div>
+                <div style="flex:1; min-width:120px;">
+                    <label style="font-size:12px; color:#7d8590; display:block; margin-bottom:4px;">Sampai Tanggal</label>
+                    <input type="date" id="lap-tgl-sampai" style="margin-bottom:0;">
+                </div>
+                <div style="display:flex; align-items:flex-end; gap:5px;">
+                    <button onclick="filterLaporan()" style="padding:10px 20px; background:#00e5c0; color:#0d1117; border:none; border-radius:8px; font-weight:bold;">🔍 Tampilkan</button>
+                    <button onclick="resetFilterLaporan()" style="padding:10px 15px; background:#1c2330; color:#7d8590; border:1px solid #30363d; border-radius:8px;">↻ Reset</button>
+                </div>
+            </div>
             <div style="overflow-x: auto;">
                 <div id="lap-tbody">Loading...</div>
             </div>
@@ -631,6 +645,7 @@ let payMethod = 'tunai';
 let currentPetugas = null;
 let isLoading = false;
 let ongkir = 0;
+let isProcessing = false; // Proteksi double click
 
 // ========== HELPER FUNCTIONS ==========
 function formatRupiah(angka) {
@@ -952,9 +967,24 @@ function setPetugas() {
     }
 }
 async function prosesTransaksi() {
+    // Proteksi double click
+    if (isProcessing) {
+        showToast('⏳ Transaksi sedang diproses, harap tunggu...', true);
+        return;
+    }
+    
     if (!currentPetugas) {
         showToast('❌ Pilih petugas terlebih dahulu!', true);
         return;
+    }
+    
+    // Disable tombol bayar
+    isProcessing = true;
+    const btnBayar = document.querySelector('.btn-bayar');
+    if (btnBayar) {
+        btnBayar.disabled = true;
+        btnBayar.style.opacity = '0.6';
+        btnBayar.innerText = '⏳ Memproses...';
     }
     
     const items = [];
@@ -1049,6 +1079,15 @@ async function prosesTransaksi() {
         ongkir = 0;
         document.getElementById('ongkir-input').value = 0;
         renderProdukGrid();
+    }
+    
+    // Re-enable tombol bayar
+    isProcessing = false;
+    const btnBayarReset = document.querySelector('.btn-bayar');
+    if (btnBayarReset) {
+        btnBayarReset.disabled = false;
+        btnBayarReset.style.opacity = '1';
+        btnBayarReset.innerText = '✅ BAYAR SEKARANG';
     }
 }
 function resetKasir() {
@@ -1162,8 +1201,11 @@ function renderHutang() {
     } else {
         Object.entries(byName).forEach(([nama, total]) => {
             html += `<div style="padding:10px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between; align-items:center;">
-                        <div><strong>${nama}</strong><br><span style="font-size:12px; color:#7d8590;">Total hutang</span></div>
-                        <div style="color:#f0a050;">${formatRupiah(total)}</div>
+                        <div>
+                            <strong>${nama}</strong><br>
+                            <span style="font-size:12px; color:#7d8590;">Total hutang: ${formatRupiah(total)}</span>
+                        </div>
+                        <button onclick="lunaskanHutang('${nama}')" style="padding:8px 16px; background:#3dd68c; color:#0d1117; border:none; border-radius:6px; font-weight:bold; font-size:13px;">✅ LUNASKAN</button>
                     </div>`;
         });
     }
@@ -1171,8 +1213,39 @@ function renderHutang() {
     const hutangListEl = document.getElementById('hutang-list');
     if (hutangListEl) hutangListEl.innerHTML = html;
 }
-function renderLaporan() {
-    if (!DB.transaksi || DB.transaksi.length === 0) {
+
+// ========== FITUR LUNAS HUTANG ==========
+async function lunaskanHutang(nama) {
+    const hutangTrx = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas && t.nama === nama);
+    const totalHutang = hutangTrx.reduce((s, t) => s + t.total, 0);
+    
+    const confirmed = confirm(`✅ Yakin ingin melunaskan hutang ${nama}?\n\nTotal hutang: ${formatRupiah(totalHutang)}\nJumlah transaksi: ${hutangTrx.length}\n\nData akan dikirim ke server.`);
+    if (!confirmed) return;
+    
+    showToast(`💾 Mengirim data lunas hutang ${nama}...`);
+    
+    try {
+        const res = await callAPI('lunaskanHutang', { 
+            action: 'lunaskanHutang', 
+            nama: nama,
+            ids: hutangTrx.map(t => t.id)
+        });
+        
+        // Update local DB
+        hutangTrx.forEach(t => t.hutangLunas = true);
+        
+        showToast(`✅ Hutang ${nama} berhasil dilunaskan!`);
+        renderHutang();
+        renderDashboard();
+        renderLaporan();
+    } catch(e) {
+        showToast(`❌ Gagal: ${e.message}`, true);
+    }
+}
+function renderLaporan(filteredData) {
+    const data = filteredData || DB.transaksi;
+    
+    if (!data || data.length === 0) {
         const lapEl = document.getElementById('lap-tbody');
         if (lapEl) lapEl.innerHTML = '<div style="color:#7d8590;">Belum ada transaksi</div>';
         return;
@@ -1182,7 +1255,7 @@ function renderLaporan() {
     html += '<th>Tanggal</th><th>Pelanggan</th><th>Subtotal</th><th>Ongkir</th><th>Total</th><th>Bayar</th><th>Status</th>';
     html += '</tr></thead><tbody>';
     
-    DB.transaksi.slice().reverse().forEach(t => {
+    data.slice().reverse().forEach(t => {
         html += `<tr>
                     <td>${t.tanggal || '-'}</td>
                     <td>${t.nama || '-'}</td>
@@ -1197,6 +1270,36 @@ function renderLaporan() {
     
     const lapEl = document.getElementById('lap-tbody');
     if (lapEl) lapEl.innerHTML = html;
+}
+
+// ========== FILTER LAPORAN ==========
+function filterLaporan() {
+    const dari = document.getElementById('lap-tgl-dari').value;
+    const sampai = document.getElementById('lap-tgl-sampai').value;
+    
+    if (!dari && !sampai) {
+        showToast('⚠️ Pilih tanggal terlebih dahulu', true);
+        return;
+    }
+    
+    let filtered = DB.transaksi;
+    
+    if (dari) {
+        filtered = filtered.filter(t => (t.tanggal || '').slice(0, 10) >= dari);
+    }
+    if (sampai) {
+        filtered = filtered.filter(t => (t.tanggal || '').slice(0, 10) <= sampai);
+    }
+    
+    renderLaporan(filtered);
+    showToast(`📊 Menampilkan ${filtered.length} transaksi`);
+}
+
+function resetFilterLaporan() {
+    document.getElementById('lap-tgl-dari').value = '';
+    document.getElementById('lap-tgl-sampai').value = '';
+    renderLaporan();
+    showToast('↻ Filter direset');
 }
 // ========== PAGE NAVIGATION ==========
 function showPage(page) {
