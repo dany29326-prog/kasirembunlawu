@@ -769,7 +769,7 @@
 
 <script>
 // ========== KONFIGURASI ==========
-const API_URL = 'https://script.google.com/macros/s/AKfycbw3Zx46vPBJZm4z4cIf543jn5_oQ_NrUu0oa16MxjS_rqTQK5OQr8YBceBfrGjBl1My3w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwnGodrCm2_bjwyK6CQDWCaApSkKgukhG9AprfTAcSe5Vsh5p6_S9M6ssiK9OR4xfwOVQ/exec';
 
 // ========== FUNGSI UTAMA ==========
 function formatRupiah(angka) {
@@ -825,11 +825,10 @@ function setOngkirDefault() {
 // ========== API CALL ==========
 async function callAPI(action, data = {}) {
     if (action === 'getAllData') {
-        // Gunakan fetch biasa dengan mode cors
+        // Langsung panggil API dengan fetch
         try {
             const response = await fetch(`${API_URL}?action=getAllData&t=${Date.now()}`, {
                 method: 'GET',
-                mode: 'cors',
                 headers: {
                     'Accept': 'application/json'
                 }
@@ -840,37 +839,28 @@ async function callAPI(action, data = {}) {
             }
             
             const result = await response.json();
-            console.log('Fetch response:', result);
+            console.log('API Response:', result);
             return result;
             
-        } catch(fetchError) {
-            console.warn('Fetch gagal, coba JSONP:', fetchError);
+        } catch(error) {
+            console.error('Fetch error:', error);
             
-            // Fallback ke JSONP jika fetch gagal
+            // Fallback ke JSONP
             return new Promise((resolve, reject) => {
-                const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                const callbackName = 'jsonp_callback_' + Date.now();
                 const script = document.createElement('script');
                 
                 const timeout = setTimeout(() => {
-                    if (window[callbackName]) {
-                        delete window[callbackName];
-                        document.body.removeChild(script);
-                        reject(new Error('Request timeout'));
-                    }
-                }, 30000);
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('Timeout'));
+                }, 15000);
                 
                 window[callbackName] = function(response) {
                     clearTimeout(timeout);
                     delete window[callbackName];
                     document.body.removeChild(script);
-                    console.log('JSONP Response:', response);
                     resolve(response);
-                };
-                
-                script.onerror = () => {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    reject(new Error('Network error'));
                 };
                 
                 script.src = `${API_URL}?action=getAllData&callback=${callbackName}&t=${Date.now()}`;
@@ -878,7 +868,7 @@ async function callAPI(action, data = {}) {
             });
         }
     } else {
-        // POST request
+        // POST untuk saveTransaction
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
