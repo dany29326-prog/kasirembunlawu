@@ -604,6 +604,7 @@ index.html
 // ========== KONFIGURASI ==========
 // !!! GANTI DENGAN URL APPS SCRIPT ANDA YANG SUDAH DI-DEPLOY !!!
 const API_URL = 'https://script.google.com/macros/s/AKfycbyH3Mc4K1NVDx9CHVLyDdxPKY2SHirjjVPI_mtOnBDohTXYB3XxC_AMWG6VDK3go7EFqg/exec';
+<<<<<<< HEAD
 
 // ========== GLOBAL VARIABLES ==========
 let DB = { 
@@ -642,6 +643,63 @@ function toggleSidebar(show) {
     }
 }
 
+=======
+
+// ========== GLOBAL VARIABLES ==========
+let DB = { 
+    produk: [], 
+    pelanggan: [], 
+    transaksi: [], 
+    petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
+    settings: { nama_depot: 'EMBUN LAWU' }
+};
+let cart = {};
+let payMethod = 'tunai';
+let currentPetugas = null;
+let isLoading = false;
+let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
+
+// ========== HELPER FUNCTIONS ==========
+function formatRupiah(angka) {
+    if (!angka && angka !== 0) return 'Rp0';
+    return 'Rp' + angka.toLocaleString('id-ID');
+}
+
+function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show';
+    if (isError) toast.classList.add('error');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function getDefaultProducts() {
+    return [
+        { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
+        { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
+        { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
+        { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
+        { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+    ];
+}
+
+function findProductById(id) {
+    let p = DB.produk.find(p => p.id === id);
+    if (p) return p;
+    const defaultProducts = getDefaultProducts();
+    return defaultProducts.find(p => p.id === id);
+}
+
+function toggleSidebar(show) {
+    const sidebar = document.getElementById('sidebar');
+    if (show === undefined) {
+        sidebar.classList.toggle('show');
+    } else if (!show) {
+        sidebar.classList.remove('show');
+    }
+}
+
+>>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
 // ========== FUNGSI ONGKIR ==========
 function updateOngkir() {
     const input = document.getElementById('ongkir-input');
@@ -828,6 +886,7 @@ function renderProdukGrid() {
     const aktifProduk = DB.produk.filter(p => p.is_active === true);
     
     if (aktifProduk.length === 0) {
+<<<<<<< HEAD
         const defaultProducts = [
             { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
             { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
@@ -835,6 +894,9 @@ function renderProdukGrid() {
             { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
             { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
         ];
+=======
+        const defaultProducts = getDefaultProducts();
+>>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         let html = '';
         defaultProducts.forEach(p => {
@@ -891,6 +953,7 @@ function updateSummary() {
     let html = '';
     
     for (let id in cart) {
+<<<<<<< HEAD
         let p = DB.produk.find(p => p.id === id);
         if (!p) {
             const defaultProducts = {
@@ -902,6 +965,9 @@ function updateSummary() {
             };
             p = defaultProducts[id];
         }
+=======
+        let p = findProductById(id);
+>>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         if (p) {
             const subtotalItem = p.harga * cart[id];
@@ -973,6 +1039,7 @@ async function prosesTransaksi() {
     
     const items = [];
     for (let id in cart) {
+<<<<<<< HEAD
         let p = DB.produk.find(p => p.id === id);
         if (!p) {
             const defaultProducts = {
@@ -984,6 +1051,9 @@ async function prosesTransaksi() {
             };
             p = defaultProducts[id];
         }
+=======
+        let p = findProductById(id);
+>>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         if (p && cart[id] > 0) {
             items.push({
@@ -1009,9 +1079,15 @@ async function prosesTransaksi() {
     const nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
     const wa = document.getElementById('kasir-wa').value.trim();
     
-    if (payMethod === 'hutang' && nama === 'Umum') {
-        showToast('❌ Masukkan nama pelanggan untuk transaksi hutang!', true);
-        return;
+    if (payMethod === 'hutang') {
+        if (!nama || nama === '' || nama === 'Umum') {
+            showToast('❌ Transaksi hutang WAJIB menggunakan nama pelanggan yang valid!', true);
+            return;
+        }
+        if (nama.length < 3) {
+            showToast('❌ Nama pelanggan minimal 3 karakter!', true);
+            return;
+        }
     }
     
     const trx = {
@@ -1071,6 +1147,16 @@ async function prosesTransaksi() {
 }
 
 function resetKasir() {
+<<<<<<< HEAD
+=======
+    const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    
+    if (totalItems > 0 || ongkir > 0) {
+        const confirmed = confirm(`⚠️ Yakin ingin mereset kasir?\n\n📦 ${totalItems} item akan dihapus\n🚚 Ongkir Rp${ongkir.toLocaleString()} akan direset`);
+        if (!confirmed) return;
+    }
+    
+>>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
     cart = {};
     ongkir = 0;
     document.getElementById('ongkir-input').value = 0;
