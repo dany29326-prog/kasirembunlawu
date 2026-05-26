@@ -3,727 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>DepotPintar - Depot Air Minum EMBUN LAWU</title>
+    <title>DepotPintar</title>
     <style>
-        /* [SEMUA STYLE SAMA PERSIS SEPERTI SEBELUMNYA] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
-        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #30363d; min-height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 100; }
+        body { background: #0d1117; color: #e6edf3; font-family: Arial, sans-serif; }
+        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #30363d; min-height: 100vh; position: fixed; left: 0; top: 0; }
         .sidebar-logo { padding: 20px; border-bottom: 1px solid #30363d; }
-        .sidebar-logo h1 { color: #00e5c0; font-size: 24px; }
+        .sidebar-logo h1 { color: #00e5c0; }
         .sidebar-logo .sub { font-size: 18px; font-weight: bold; color: #00e5c0; margin-top: 8px; }
-        .nav-item { padding: 12px 20px; cursor: pointer; color: #7d8590; transition: all 0.2s; }
+        .nav-item { padding: 12px 20px; cursor: pointer; color: #7d8590; }
         .nav-item:hover { background: #1c2330; color: white; }
-        .nav-item.active { color: #00e5c0; background: rgba(0, 229, 192, 0.1); border-left: 3px solid #00e5c0; }
-        .main { margin-left: 260px; padding: 20px; min-height: 100vh; }
+        .nav-item.active { color: #00e5c0; background: rgba(0,229,192,0.1); border-left: 3px solid #00e5c0; }
+        .main { margin-left: 260px; padding: 20px; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .card-title { font-size: 14px; color: #7d8590; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .stat-value { font-size: 28px; font-weight: bold; margin-top: 5px; }
+        .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-value { font-size: 28px; font-weight: bold; }
         .stat-value.green { color: #3dd68c; }
         .stat-value.blue { color: #1d8cf8; }
         .stat-value.orange { color: #f0a050; }
-        .stat-label { font-size: 13px; color: #7d8590; }
         .produk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .produk-card { background: #1c2330; border: 1px solid #30363d; border-radius: 10px; padding: 12px; transition: transform 0.1s; }
-        .produk-card:hover { transform: translateY(-2px); border-color: #00e5c0; }
-        .produk-icon { font-size: 32px; margin-bottom: 8px; }
-        .produk-nama { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-        .produk-harga { color: #00e5c0; font-size: 14px; margin-bottom: 10px; }
+        .produk-card { background: #1c2330; border: 1px solid #30363d; border-radius: 10px; padding: 12px; }
+        .produk-icon { font-size: 32px; }
+        .produk-nama { font-weight: bold; margin-top: 8px; }
+        .produk-harga { color: #00e5c0; margin: 8px 0; }
         .qty-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         .q-btn { background: #0d1117; border: 1px solid #30363d; color: white; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 18px; }
-        .q-btn:hover { background: #00e5c0; color: #0d1117; border-color: #00e5c0; }
         .q-num { font-size: 18px; font-weight: bold; min-width: 30px; text-align: center; }
-        input, select { width: 100%; background: #1c2330; border: 1px solid #30363d; color: white; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #00e5c0; }
-        button { cursor: pointer; }
+        input, select { width: 100%; background: #1c2330; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .btn-bayar { width: 100%; background: #00e5c0; color: #0d1117; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        .btn-bayar:hover { background: #00c4a3; }
         .btn-secondary { width: 100%; background: transparent; border: 1px solid #30363d; color: #7d8590; padding: 10px; border-radius: 8px; margin-top: 8px; }
-        .btn-secondary:hover { background: #1c2330; color: white; }
         .pay-methods { display: flex; gap: 10px; margin: 10px 0; }
         .pay-btn { flex: 1; padding: 10px; border: 1px solid #30363d; background: #1c2330; color: #7d8590; border-radius: 8px; text-align: center; cursor: pointer; }
-        .pay-btn.selected { border-color: #00e5c0; background: rgba(0, 229, 192, 0.1); color: #00e5c0; }
+        .pay-btn.selected { border-color: #00e5c0; background: rgba(0,229,192,0.1); color: #00e5c0; }
         .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-        .pin-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0d1117; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; }
-        .pin-card { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 40px; text-align: center; width: 90%; max-width: 350px; }
-        .pin-card h2 { color: #00e5c0; margin-bottom: 20px; }
-        .pin-input { font-size: 32px; letter-spacing: 10px; text-align: center; margin: 20px 0; }
-        .pin-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .pin-btn { background: #1c2330; border: 1px solid #30363d; color: white; padding: 15px; font-size: 20px; border-radius: 12px; cursor: pointer; }
-        .pin-btn:hover { background: #00e5c0; color: #0d1117; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #3dd68c; color: #0d1117; padding: 12px 20px; border-radius: 8px; display: none; z-index: 1000; animation: slideIn 0.3s ease; }
+        .page.active { display: block; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #3dd68c; color: #0d1117; padding: 12px 20px; border-radius: 8px; display: none; z-index: 1000; }
         .toast.show { display: block; }
         .toast.error { background: #f05c5c; color: white; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .loading { text-align: center; padding: 40px; color: #7d8590; }
         .summary-row { padding: 8px 0; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; }
-        .ongkir-row { display: flex; gap: 10px; align-items: center; margin: 10px 0; }
-        .ongkir-row input { flex: 2; margin-bottom: 0; }
-        .ongkir-row button { flex: 1; padding: 10px; background: #1c2330; border: 1px solid #30363d; color: white; border-radius: 8px; }
         .grand-total { font-size: 28px; font-weight: bold; color: #00e5c0; text-align: right; margin-top: 15px; padding-top: 15px; border-top: 2px solid #30363d; }
-        .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; background: #161b22; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 8px; cursor: pointer; z-index: 101; }
-        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .main { margin-left: 0; } .grid4 { grid-template-columns: 1fr; } .produk-grid { grid-template-columns: 1fr; } .menu-toggle { display: block; } }
-        .petugas-status { display: inline-block; margin-left: 10px; color: #3dd68c; font-size: 12px; }
-        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #30363d; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #30363d; }
-        .data-table th { color: #7d8590; font-weight: normal; }
+        .label-ongkir { color: #7d8590; font-size: 13px; margin-bottom: 5px; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .main { margin-left: 0; } .grid4 { grid-template-columns: 1fr; } }
+        .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; background: #161b22; border: 1px solid #30363d; padding: 10px; border-radius: 8px; cursor: pointer; z-index: 101; }
+        @media (max-width: 768px) { .menu-toggle { display: block; } }
     </style>
 </head>
 <body>
 
-<div id="pinPage" class="pin-page">
-    <div class="pin-card">
-        <h2>🔐 DepotPintar</h2>
-        <p style="color: #7d8590; margin-bottom: 20px;">Masukkan PIN untuk membuka aplikasi</p>
-        <input type="password" id="pinInput" class="pin-input" maxlength="6" placeholder="••••••" style="font-size: 28px; text-align: center; letter-spacing: 8px;">
-        <div class="pin-buttons">
-            <button class="pin-btn" onclick="pinInput(1)">1</button><button class="pin-btn" onclick="pinInput(2)">2</button><button class="pin-btn" onclick="pinInput(3)">3</button>
-            <button class="pin-btn" onclick="pinInput(4)">4</button><button class="pin-btn" onclick="pinInput(5)">5</button><button class="pin-btn" onclick="pinInput(6)">6</button>
-            <button class="pin-btn" onclick="pinInput(7)">7</button><button class="pin-btn" onclick="pinInput(8)">8</button><button class="pin-btn" onclick="pinInput(9)">9</button>
-            <button class="pin-btn" onclick="pinInput(0)">0</button><button class="pin-btn" onclick="pinDelete()">⌫</button><button class="pin-btn" onclick="pinLogin()" style="background: #00e5c0; color: #0d1117;">✔</button>
-        </div>
-        <button class="btn-secondary" onclick="setupNewPIN()" style="margin-top: 20px;">🔑 Setup PIN Baru</button>
-    </div>
-</div>
-
-<div id="mainApp" style="display: none;">
 <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><h1>💧 DepotPintar</h1><div class="sub" id="namaDepot">EMBUN LAWU</div></div>
+    <div class="sidebar-logo">
+        <h1>💧 DepotPintar</h1>
+        <div class="sub" id="namaDepot">EMBUN LAWU</div>
+    </div>
     <nav>
-        <div class="nav-item active" onclick="showPage('dashboard'); toggleSidebar(false)">📊 Dashboard</div>
-        <div class="nav-item" onclick="showPage('kasir'); toggleSidebar(false)">🧾 Kasir</div>
-        <div class="nav-item" onclick="showPage('pelanggan'); toggleSidebar(false)">👥 Pelanggan</div>
-        <div class="nav-item" onclick="showPage('hutang'); toggleSidebar(false)">📒 Hutang</div>
-        <div class="nav-item" onclick="showPage('laporan'); toggleSidebar(false)">📈 Laporan</div>
-        <div class="nav-item" onclick="showPage('pengaturan'); toggleSidebar(false)">⚙️ Pengaturan</div>
+        <div class="nav-item active" onclick="showPage('dashboard')">📊 Dashboard</div>
+        <div class="nav-item" onclick="showPage('kasir')">🧾 Kasir</div>
+        <div class="nav-item" onclick="showPage('pelanggan')">👥 Pelanggan</div>
+        <div class="nav-item" onclick="showPage('hutang')">📒 Hutang</div>
+        <div class="nav-item" onclick="showPage('laporan')">📈 Laporan</div>
     </nav>
 </aside>
+
 <main class="main">
     <div id="page-dashboard" class="page active">
         <div class="grid4">
-            <div class="card"><div class="stat-label">Omset Hari Ini</div><div class="stat-value green" id="dash-omset">Rp0</div><div id="dash-omset-sub" style="font-size:12px; color:#7d8590;">0 transaksi</div></div>
+            <div class="card"><div class="stat-label">Omset Hari Ini</div><div class="stat-value green" id="dash-omset">Rp0</div><div id="dash-omset-sub" style="font-size:12px;">0 transaksi</div></div>
             <div class="card"><div class="stat-label">Galon Terjual</div><div class="stat-value blue" id="dash-galon">0</div></div>
             <div class="card"><div class="stat-label">Total Hutang</div><div class="stat-value orange" id="dash-hutang">Rp0</div></div>
             <div class="card"><div class="stat-label">Pelanggan</div><div class="stat-value" id="dash-pelanggan">0</div></div>
         </div>
         <div class="card"><div class="card-title">📋 Transaksi Terbaru</div><div id="dash-trx-list">Loading...</div></div>
     </div>
+
     <div id="page-kasir" class="page">
-        <div class="card"><div class="card-title">👤 Petugas Kasir</div><select id="selectPetugas" onchange="setPetugas()"><option value="">-- Pilih Petugas --</option></select><span id="petugasStatus" class="petugas-status"></span></div>
-        <div class="card"><div class="card-title">🛒 Pilih Produk</div><div id="produk-grid" class="produk-grid"><div class="loading">⏳ Memuat data produk...</div></div></div>
         <div class="card">
-            <div class="card-title">📝 Ringkasan Pesanan</div><div id="order-items">Belum ada produk dipilih</div>
-            <div class="summary-row" style="margin-top: 10px;"><span>Subtotal</span><span id="subtotal-display">Rp0</span></div>
-            <div style="margin: 15px 0;"><div class="label-ongkir">🚚 Biaya Ongkir (opsional)</div><div class="ongkir-row"><input type="number" id="ongkir-input" placeholder="Masukkan biaya ongkir" value="0" oninput="updateOngkir()"><button onclick="setOngkirDefault()">📍 Default (Rp5.000)</button></div></div>
+            <div class="card-title">👤 Petugas Kasir</div>
+            <select id="selectPetugas" onchange="setPetugas()"><option value="">-- Pilih Petugas --</option></select>
+            <span id="petugasStatus"></span>
+        </div>
+        <div class="card"><div class="card-title">🛒 Pilih Produk</div><div id="produk-grid" class="produk-grid"><div class="loading">⏳ Memuat data...</div></div></div>
+        <div class="card">
+            <div class="card-title">📝 Ringkasan Pesanan</div>
+            <div id="order-items">Belum ada produk dipilih</div>
+            <div class="summary-row" style="margin-top:10px;"><span>Subtotal</span><span id="subtotal-display">Rp0</span></div>
+            <div style="margin:15px 0;"><div class="label-ongkir">🚚 Biaya Ongkir</div><input type="number" id="ongkir-input" placeholder="Biaya ongkir" value="0" oninput="updateOngkir()"></div>
             <div class="grand-total" id="grand-total-display">Total: Rp0</div>
         </div>
-        <input type="text" id="kasir-nama" placeholder="Nama pelanggan (opsional)">
-        <input type="text" id="kasir-wa" placeholder="Nomor WhatsApp (opsional)">
+        <input type="text" id="kasir-nama" placeholder="Nama pelanggan">
+        <input type="text" id="kasir-wa" placeholder="No WhatsApp">
         <div class="pay-methods"><div class="pay-btn selected" onclick="selectPay('tunai')">💵 Tunai</div><div class="pay-btn" onclick="selectPay('qris')">📱 QRIS</div><div class="pay-btn" onclick="selectPay('hutang')">📒 Hutang</div></div>
         <button class="btn-bayar" onclick="prosesTransaksi()">✅ BAYAR SEKARANG</button>
         <button class="btn-secondary" onclick="resetKasir()">🔄 Reset Kasir</button>
-        <div style="display: flex; gap: 10px; margin-top: 10px;"><button class="btn-secondary" id="btnConnectPrinter" onclick="connectBluetoothPrinter()" style="flex:1;">🔌 Konek Printer Bluetooth</button><button class="btn-secondary" id="btnPrint" onclick="printStruk()" style="flex:1; display:none;">🧾 Cetak Struk</button></div>
-        <div id="printerStatus" style="font-size: 12px; color: #7d8590; margin-top: 5px; text-align: center;"></div>
     </div>
-    <div id="page-pelanggan" class="page"><div class="card"><div class="card-title">👥 Daftar Pelanggan</div><div id="pel-list">Loading...</div></div></div>
-    <div id="page-hutang" class="page"><div class="card"><div class="card-title">📒 Daftar Hutang</div><div id="hutang-list">Loading...</div></div></div>
-    <div id="page-laporan" class="page"><div class="card"><div class="card-title">📈 Laporan Transaksi</div><div style="overflow-x: auto;"><div id="lap-tbody">Loading...</div></div></div></div>
-    <div id="page-pengaturan" class="page">
-        <div class="card"><div class="card-title">🔐 Keamanan</div><div class="setting-item"><div><div class="setting-label">PIN Aplikasi</div><div class="setting-desc">PIN untuk membuka DepotPintar</div></div><button class="btn-secondary" onclick="gantiPIN()" style="margin:0; width:auto; padding:8px 20px;">Ganti PIN</button></div></div>
-        <div class="card"><div class="card-title">🖨️ Printer</div><div class="setting-item"><div><div class="setting-label">Printer Thermal Bluetooth</div><div class="setting-desc">Hubungkan printer ke HP/Tablet</div></div><button class="btn-secondary" onclick="connectBluetoothPrinter()" style="margin:0; width:auto; padding:8px 20px;">Konek Printer</button></div><div class="setting-item"><div><div class="setting-label">Cetak Struk Otomatis</div><div class="setting-desc">Cetak struk setelah transaksi berhasil</div></div><label style="display: flex; align-items: center;"><input type="checkbox" id="autoPrintSetting" checked style="width: auto; margin: 0; transform: scale(1.2);"></label></div></div>
-        <div class="card"><div class="card-title">ℹ️ Tentang Aplikasi</div><div class="setting-item"><div><div class="setting-label">DepotPintar</div><div class="setting-desc">Versi 2.0.0 | Sistem Kasir Depot Air Minum</div><div class="setting-desc">Dibuat untuk EMBUN LAWU, Tawangmangu</div></div></div></div>
-    </div>
+
+    <div id="page-pelanggan" class="page"><div class="card"><div id="pel-list">Loading...</div></div></div>
+    <div id="page-hutang" class="page"><div class="card"><div id="hutang-list">Loading...</div></div></div>
+    <div id="page-laporan" class="page"><div class="card"><div style="overflow-x:auto;"><div id="lap-tbody">Loading...</div></div></div></div>
 </main>
+
 <div id="toast" class="toast"></div>
-</div>
 
 <script>
 // ========== KONFIGURASI ==========
+// GANTI DENGAN URL APPS SCRIPT ANDA
 const API_URL = 'https://script.google.com/macros/s/AKfycbz2noe71H8mhTOoaFGiINxVlih6URgArjzuseemXvdZHMoDdic9opCiLcvgUCTX1aUiOg/exec';
 
-// ========== FUNGSI UTAMA ==========
-function formatRupiah(angka) {
-    if (!angka && angka !== 0) return 'Rp0';
-    return 'Rp' + angka.toLocaleString('id-ID');
-}
-
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = 'toast show';
-    if (isError) toast.classList.add('error');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function toggleSidebar(show) {
-    const sidebar = document.getElementById('sidebar');
-    if (show === undefined) sidebar.classList.toggle('show');
-    else if (!show) sidebar.classList.remove('show');
-}
-
-// ========== GLOBAL VARIABLES ==========
-let DB = { 
-    produk: [], 
-    pelanggan: [], 
-    transaksi: [], 
-    petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
-    settings: { nama_depot: 'EMBUN LAWU' }
-};
+// ========== GLOBAL ==========
+let DB = { produk: [], pelanggan: [], transaksi: [], petugas: [{ id: 'P001', nama: 'KHOLID' }], settings: { nama_depot: 'EMBUN LAWU' } };
 let cart = {};
 let payMethod = 'tunai';
 let currentPetugas = null;
-let isLoading = false;
 let ongkir = 0;
 
-// ========== ONGKIR ==========
-function updateOngkir() {
-    const input = document.getElementById('ongkir-input');
-    ongkir = parseInt(input.value) || 0;
-    updateSummary();
-}
+function formatRupiah(angka) { return 'Rp' + (angka || 0).toLocaleString('id-ID'); }
+function showToast(msg, isError = false) { let toast = document.getElementById('toast'); toast.textContent = msg; toast.className = 'toast show'; if (isError) toast.classList.add('error'); setTimeout(() => toast.classList.remove('show'), 3000); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
 
-function setOngkirDefault() {
-    ongkir = 5000;
-    document.getElementById('ongkir-input').value = 5000;
-    updateSummary();
-    showToast('🚚 Ongkir diatur Rp5.000');
-}
+function updateOngkir() { ongkir = parseInt(document.getElementById('ongkir-input').value) || 0; updateSummary(); }
+function selectPay(method) { payMethod = method; document.querySelectorAll('.pay-btn').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); }
+function setPetugas() { let id = document.getElementById('selectPetugas').value; currentPetugas = DB.petugas.find(p => p.id === id); document.getElementById('petugasStatus').innerText = currentPetugas ? `✅ ${currentPetugas.nama}` : ''; }
+function resetKasir() { cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0; renderProdukGrid(); document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = ''; showToast('🔄 Kasir direset'); }
 
-// ========== API CALL DENGAN JSONP (PASTI BERHASIL) ==========
-function jsonpRequest(url, callbackName) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        const timeout = setTimeout(() => {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            reject(new Error('JSONP timeout'));
-        }, 15000);
-        
-        window[callbackName] = function(data) {
-            clearTimeout(timeout);
-            delete window[callbackName];
-            document.body.removeChild(script);
-            resolve(data);
-        };
-        
-        script.src = `${url}&callback=${callbackName}&_=${Date.now()}`;
-        script.onerror = () => {
-            clearTimeout(timeout);
-            delete window[callbackName];
-            document.body.removeChild(script);
-            reject(new Error('JSONP load error'));
-        };
-        document.body.appendChild(script);
-    });
-}
-
-async function callAPI(action, data = {}) {
-    console.log(`📡 callAPI: ${action}`);
-    
-    try {
-        if (action === 'getAllData') {
-            // Gunakan JSONP untuk GET request
-            const url = `${API_URL}?action=getAllData`;
-            const callbackName = 'jsonp_callback_' + Date.now();
-            const response = await jsonpRequest(url, callbackName);
-            console.log('✅ JSONP Response:', response);
-            
-            if (response.status === 'ok') {
-                if (response.data) {
-                    return response.data;
-                } else if (response.produk) {
-                    return response;
-                } else {
-                    return response;
-                }
-            } else {
-                throw new Error(response.message || 'API error');
-            }
-        } else if (action === 'saveTransaction') {
-            // POST tetap pakai fetch
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'saveTransaction',
-                    transaction: data.transaction
-                })
-            });
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const result = await response.json();
-            console.log('✅ Save result:', result);
-            return result;
-        }
-    } catch(error) {
-        console.error('❌ API Error:', error);
-        throw error;
-    }
-}
-
-// ========== DATA DUMMY ==========
-function getDummyData() {
-    return {
-        produk: [
-            { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-            { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-            { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-            { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-            { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-        ],
-        pelanggan: [],
-        transaksi: [],
-        petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
-        settings: { nama_depot: 'EMBUN LAWU' }
-    };
-}
-
-// ========== LOAD DATA ==========
 async function loadAllData() {
-    if (isLoading) return;
-    isLoading = true;
-    
-    showToast('🔄 Mengambil data dari server...');
-    console.log('🚀 Starting loadAllData...');
-    
+    showToast('🔄 Mengambil data...');
     try {
-        let apiData;
-        try {
-            apiData = await callAPI('getAllData');
-            console.log('✅ API Data received:', apiData);
-            
-            if (apiData && apiData.data) {
-                DB = apiData.data;
-            } else if (apiData && apiData.produk) {
-                DB.produk = apiData.produk || [];
-                DB.settings = apiData.settings || { nama_depot: 'EMBUN LAWU' };
-                DB.pelanggan = apiData.pelanggan || [];
-                DB.transaksi = apiData.transaksi || [];
-                DB.petugas = apiData.petugas || [{ id: 'P001', nama: 'KHOLID' }];
-            } else if (apiData && typeof apiData === 'object') {
-                DB = { ...DB, ...apiData };
-            } else {
-                throw new Error('Invalid data format');
-            }
-            
-            if (!DB.produk) DB.produk = [];
-            
-        } catch(apiError) {
-            console.error('❌ API failed:', apiError);
-            showToast('⚠️ Gagal konek server, menggunakan data offline', true);
-            const dummy = getDummyData();
-            DB = dummy;
-        }
-        
-        // Ensure all properties exist
-        if (!DB.petugas || DB.petugas.length === 0) DB.petugas = [{ id: 'P001', nama: 'KHOLID' }];
-        if (!DB.settings) DB.settings = { nama_depot: 'EMBUN LAWU' };
-        if (!DB.transaksi) DB.transaksi = [];
-        if (!DB.pelanggan) DB.pelanggan = [];
-        
-        // Update UI
-        const select = document.getElementById('selectPetugas');
-        if (select) {
-            select.innerHTML = '<option value="">-- Pilih Petugas --</option>';
-            DB.petugas.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`;
-            });
-        }
-        
-        if (DB.settings && DB.settings.nama_depot) {
-            document.getElementById('namaDepot').innerText = DB.settings.nama_depot;
-        }
-        
-        renderProdukGrid();
-        renderDashboard();
-        renderPelanggan();
-        renderHutang();
-        renderLaporan();
-        
-        const aktifCount = DB.produk.filter(p => p.is_active === true).length;
-        if (aktifCount === 0) {
-            showToast('⚠️ Tidak ada produk aktif!', true);
-        } else {
-            showToast(`✅ ${aktifCount} produk siap digunakan`);
-        }
-        
-    } catch(error) {
-        console.error('❌ Load Data Error:', error);
-        showToast(`❌ Gagal load data: ${error.message}`, true);
-        const dummy = getDummyData();
-        DB = dummy;
-        renderProdukGrid();
-        renderDashboard();
-        renderPelanggan();
-        renderHutang();
-        renderLaporan();
-    } finally {
-        isLoading = false;
-    }
+        let response = await fetch(API_URL + '?action=getAllData&t=' + Date.now());
+        let res = await response.json();
+        console.log('Data:', res);
+        if (res.status === 'ok' && res.data) {
+            DB = res.data;
+            if (!DB.petugas || DB.petugas.length === 0) DB.petugas = [{ id: 'P001', nama: 'KHOLID' }];
+            let select = document.getElementById('selectPetugas');
+            if (select) { select.innerHTML = '<option value="">-- Pilih Petugas --</option>'; DB.petugas.forEach(p => { select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`; }); }
+            renderProdukGrid();
+            renderDashboard();
+            renderPelanggan();
+            renderHutang();
+            renderLaporan();
+            showToast(`✅ ${DB.produk.length} produk dimuat`);
+        } else { throw new Error('Data error'); }
+    } catch(e) { showToast('❌ Gagal load: ' + e.message, true); console.error(e); }
 }
 
-// ========== RENDER PRODUK ==========
 function renderProdukGrid() {
-    const grid = document.getElementById('produk-grid');
-    if (!grid) return;
-    
-    const aktifProduk = DB.produk.filter(p => p.is_active === true);
-    console.log('🎨 Rendering produk, count:', aktifProduk.length);
-    
-    if (aktifProduk.length === 0) {
-        const defaultProducts = [
-            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
-            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
-            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 }
-        ];
-        let html = '';
-        defaultProducts.forEach(p => {
-            const qty = cart[p.id] || 0;
-            html += `<div class="produk-card"><div class="produk-icon">${p.icon}</div><div class="produk-nama">${p.nama}</div><div class="produk-harga">${formatRupiah(p.harga)} / ${p.satuan}</div><div class="qty-row"><button class="q-btn" onclick="changeCart('${p.id}', -1)">-</button><div class="q-num">${qty}</div><button class="q-btn" onclick="changeCart('${p.id}', 1)">+</button></div></div>`;
-        });
-        grid.innerHTML = html;
-        return;
-    }
-    
+    let aktif = DB.produk.filter(p => p.is_active === true);
+    if (aktif.length === 0) { document.getElementById('produk-grid').innerHTML = '<div class="card">Tidak ada produk aktif</div>'; return; }
     let html = '';
-    aktifProduk.forEach(p => {
-        const qty = cart[p.id] || 0;
-        html += `<div class="produk-card"><div class="produk-icon">${p.icon || '💧'}</div><div class="produk-nama">${p.nama}</div><div class="produk-harga">${formatRupiah(p.harga)} / ${p.satuan || 'galon'}</div><div class="qty-row"><button class="q-btn" onclick="changeCart('${p.id}', -1)">-</button><div class="q-num">${qty}</div><button class="q-btn" onclick="changeCart('${p.id}', 1)">+</button></div></div>`;
-    });
-    grid.innerHTML = html;
+    aktif.forEach(p => { let qty = cart[p.id] || 0; html += `<div class="produk-card"><div class="produk-icon">${p.icon || '💧'}</div><div class="produk-nama">${p.nama}</div><div class="produk-harga">${formatRupiah(p.harga)} / ${p.satuan}</div><div class="qty-row"><button class="q-btn" onclick="changeCart('${p.id}',-1)">-</button><div class="q-num">${qty}</div><button class="q-btn" onclick="changeCart('${p.id}',1)">+</button></div></div>`; });
+    document.getElementById('produk-grid').innerHTML = html;
     updateSummary();
 }
 
-function changeCart(id, delta) {
-    const qty = (cart[id] || 0) + delta;
-    if (qty <= 0) delete cart[id];
-    else cart[id] = qty;
-    renderProdukGrid();
-}
+function changeCart(id, delta) { let qty = (cart[id] || 0) + delta; if (qty <= 0) delete cart[id]; else cart[id] = qty; renderProdukGrid(); }
 
 function updateSummary() {
-    let subtotal = 0;
-    let html = '';
-    
-    for (let id in cart) {
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { nama: 'Galon Biasa', icon: '💧', harga: 6000 },
-                'd2': { nama: 'Galon RO', icon: '💧✨', harga: 10000 },
-                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 }
-            };
-            p = defaultProducts[id];
-        }
-        if (p) {
-            const subtotalItem = p.harga * cart[id];
-            subtotal += subtotalItem;
-            html += `<div class="summary-row"><span>${p.icon} ${p.nama} x${cart[id]}</span><span>${formatRupiah(subtotalItem)}</span></div>`;
-        }
-    }
-    
-    document.getElementById('order-items').innerHTML = html || '<div style="color:#7d8590;">Belum ada produk dipilih</div>';
+    let subtotal = 0, html = '';
+    for (let id in cart) { let p = DB.produk.find(p => p.id === id); if (p) { let sub = p.harga * cart[id]; subtotal += sub; html += `<div class="summary-row"><span>${p.icon} ${p.nama} x${cart[id]}</span><span>${formatRupiah(sub)}</span></div>`; } }
+    document.getElementById('order-items').innerHTML = html || '<div>Belum ada produk</div>';
     document.getElementById('subtotal-display').innerText = formatRupiah(subtotal);
-    const grandTotal = subtotal + ongkir;
-    const grandDisplay = document.getElementById('grand-total-display');
-    if (grandDisplay) {
-        if (ongkir > 0) grandDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)} <span style="font-size:12px; color:#7d8590;">(termasuk ongkir ${formatRupiah(ongkir)})</span>`;
-        else grandDisplay.innerHTML = `Total: ${formatRupiah(grandTotal)}`;
-    }
-    return { subtotal, grandTotal };
-}
-
-function selectPay(method) {
-    payMethod = method;
-    document.querySelectorAll('.pay-btn').forEach(btn => btn.classList.remove('selected'));
-    if (method === 'tunai') document.querySelectorAll('.pay-btn')[0].classList.add('selected');
-    else if (method === 'qris') document.querySelectorAll('.pay-btn')[1].classList.add('selected');
-    else document.querySelectorAll('.pay-btn')[2].classList.add('selected');
-}
-
-function setPetugas() {
-    const id = document.getElementById('selectPetugas').value;
-    currentPetugas = DB.petugas?.find(p => p.id === id);
-    if (!currentPetugas && id === 'P001') currentPetugas = { id: 'P001', nama: 'KHOLID' };
-    const statusSpan = document.getElementById('petugasStatus');
-    if (statusSpan) statusSpan.innerText = currentPetugas ? `✅ ${currentPetugas.nama}` : '';
+    let grand = subtotal + ongkir;
+    document.getElementById('grand-total-display').innerHTML = `Total: ${formatRupiah(grand)}` + (ongkir > 0 ? ` <span style="font-size:12px;">(termasuk ongkir ${formatRupiah(ongkir)})</span>` : '');
 }
 
 async function prosesTransaksi() {
-    if (!currentPetugas) {
-        showToast('❌ Pilih petugas terlebih dahulu!', true);
-        return;
-    }
-    
-    const items = [];
-    for (let id in cart) {
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
-                'd2': { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
-                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 }
-            };
-            p = defaultProducts[id];
-        }
-        if (p && cart[id] > 0) {
-            items.push({ id: p.id, nama: p.nama, icon: p.icon, satuan: p.satuan || 'galon', harga: p.harga, qty: cart[id], subtotal: p.harga * cart[id] });
-        }
-    }
-    
-    if (items.length === 0) {
-        showToast('❌ Pilih produk terlebih dahulu!', true);
-        return;
-    }
-    
-    const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
-    const total = subtotal + ongkir;
-    const totalGalon = items.filter(i => i.satuan === 'galon').reduce((s, i) => s + i.qty, 0);
-    const nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
-    const wa = document.getElementById('kasir-wa').value.trim();
-    
-    if (payMethod === 'hutang' && nama === 'Umum') {
-        showToast('❌ Masukkan nama pelanggan untuk transaksi hutang!', true);
-        return;
-    }
-    
-    const trx = {
-        id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        tanggal: new Date().toISOString().slice(0, 10),
-        waktu: new Date().toISOString(),
-        petugas_id: currentPetugas.id,
-        petugas_nama: currentPetugas.nama,
-        nama: nama, wa: wa, items: items, ongkir: ongkir,
-        subtotal: subtotal, total: total, bayar: payMethod,
-        status: payMethod === 'hutang' ? 'hutang' : 'lunas',
-        catatan: '', hutangLunas: false, totalGalon: totalGalon
-    };
-    
-    showToast('💾 Menyimpan transaksi...');
-    
+    if (!currentPetugas) { showToast('❌ Pilih petugas dulu!', true); return; }
+    let items = [];
+    for (let id in cart) { let p = DB.produk.find(p => p.id === id); if (p && cart[id] > 0) { items.push({ id: p.id, nama: p.nama, icon: p.icon, satuan: p.satuan, harga: p.harga, qty: cart[id], subtotal: p.harga * cart[id] }); } }
+    if (items.length === 0) { showToast('❌ Pilih produk dulu!', true); return; }
+    let subtotal = items.reduce((s,i) => s + i.subtotal, 0);
+    let total = subtotal + ongkir;
+    let totalGalon = items.filter(i => i.satuan === 'galon').reduce((s,i) => s + i.qty, 0);
+    let nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
+    let wa = document.getElementById('kasir-wa').value.trim();
+    if (payMethod === 'hutang' && nama === 'Umum') { showToast('❌ Masukkan nama untuk hutang!', true); return; }
+    let trx = { id: 'TRX_' + Date.now(), tanggal: new Date().toISOString().slice(0,10), waktu: new Date().toISOString(), petugas_id: currentPetugas.id, petugas_nama: currentPetugas.nama, nama: nama, wa: wa, items: items, ongkir: ongkir, subtotal: subtotal, total: total, bayar: payMethod, status: payMethod === 'hutang' ? 'hutang' : 'lunas', catatan: '', hutangLunas: false, totalGalon: totalGalon };
+    showToast('💾 Menyimpan...');
     try {
-        const res = await callAPI('saveTransaction', { transaction: trx });
-        if (res.status === 'ok') {
-            showToast('✅ Transaksi berhasil disimpan!');
-            autoPrint();
-            cart = {}; ongkir = 0;
-            document.getElementById('ongkir-input').value = 0;
-            renderProdukGrid();
-            await loadAllData();
-        } else {
-            let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
-            offlineTrx.push(trx);
-            localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
-            showToast('⚠️ Tersimpan offline (koneksi terbatas)', true);
-            cart = {}; ongkir = 0;
-            renderProdukGrid();
-        }
-    } catch(e) {
-        console.error('Save error:', e);
-        let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
-        offlineTrx.push(trx);
-        localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
-        showToast('⚠️ Tersimpan offline (koneksi terbatas)', true);
-        cart = {}; ongkir = 0;
-        renderProdukGrid();
-    }
-}
-
-function resetKasir() {
-    cart = {}; ongkir = 0;
-    document.getElementById('ongkir-input').value = 0;
-    renderProdukGrid();
-    document.getElementById('kasir-nama').value = '';
-    document.getElementById('kasir-wa').value = '';
-    showToast('🔄 Kasir direset');
+        let response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveTransaction', transaction: trx }) });
+        let res = await response.json();
+        if (res.status === 'ok') { showToast('✅ Transaksi berhasil!'); cart = {}; ongkir = 0; renderProdukGrid(); document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = ''; loadAllData(); }
+        else { throw new Error(res.message); }
+    } catch(e) { showToast('❌ Gagal: ' + e.message, true); }
 }
 
 function renderDashboard() {
-    const today = new Date();
-    const todayString = today.toISOString().slice(0, 10);
-    const todayTrx = DB.transaksi.filter(t => {
-        let tgl = t.tanggal || '';
-        return tgl.slice(0, 10) === todayString;
-    });
-    const omset = todayTrx.filter(t => t.status === 'lunas').reduce((s, t) => s + (t.total || 0), 0);
-    const galon = todayTrx.reduce((s, t) => s + (t.totalGalon || 0), 0);
-    const hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s, t) => s + (t.total || 0), 0);
+    let today = new Date().toISOString().slice(0,10);
+    let todayTrx = DB.transaksi.filter(t => (t.tanggal || '').slice(0,10) === today);
+    let omset = todayTrx.filter(t => t.status === 'lunas').reduce((s,t) => s + (t.total || 0), 0);
+    let galon = todayTrx.reduce((s,t) => s + (t.totalGalon || 0), 0);
+    let hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s,t) => s + (t.total || 0), 0);
     document.getElementById('dash-omset').innerText = formatRupiah(omset);
     document.getElementById('dash-omset-sub').innerText = todayTrx.length + ' transaksi';
     document.getElementById('dash-galon').innerText = galon;
     document.getElementById('dash-hutang').innerText = formatRupiah(hutang);
     document.getElementById('dash-pelanggan').innerText = DB.pelanggan.length;
-    let html = '';
-    if (todayTrx.length === 0) html = '<div style="color:#7d8590;">Belum ada transaksi hari ini</div>';
-    else todayTrx.slice(0, 5).forEach(t => { html += `<div style="padding:8px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between;"><span>${t.nama}</span><span style="color:#00e5c0;">${formatRupiah(t.total)}</span></div>`; });
+    let html = todayTrx.length === 0 ? '<div>Belum ada transaksi hari ini</div>' : todayTrx.slice(0,5).map(t => `<div style="padding:5px 0;">${t.nama} - ${formatRupiah(t.total)}</div>`).join('');
     document.getElementById('dash-trx-list').innerHTML = html;
 }
 
-function renderPelanggan() {
-    let html = '';
-    if (!DB.pelanggan || DB.pelanggan.length === 0) html = '<div style="color:#7d8590;">Belum ada data pelanggan</div>';
-    else DB.pelanggan.forEach(p => { html += `<div style="padding:10px 0; border-bottom:1px solid #30363d;"><div><strong>${p.nama}</strong></div><div style="font-size:13px; color:#7d8590;">Total order: ${formatRupiah(p.total_order)}</div>${p.hutang > 0 ? `<div style="font-size:13px; color:#f0a050;">Hutang: ${formatRupiah(p.hutang)}</div>` : ''}</div>`; });
-    document.getElementById('pel-list').innerHTML = html;
-}
+function renderPelanggan() { let html = DB.pelanggan.length === 0 ? '<div>Belum ada data</div>' : DB.pelanggan.map(p => `<div style="padding:8px 0;"><b>${p.nama}</b><br>Total: ${formatRupiah(p.total_order)}</div>`).join(''); document.getElementById('pel-list').innerHTML = html; }
+function renderHutang() { let hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas); let byName = {}; hutang.forEach(t => { byName[t.nama] = (byName[t.nama] || 0) + t.total; }); let html = Object.keys(byName).length === 0 ? '<div>✅ Semua lunas</div>' : Object.entries(byName).map(([n,v]) => `<div style="padding:8px 0;"><b>${n}</b> - ${formatRupiah(v)}</div>`).join(''); document.getElementById('hutang-list').innerHTML = html; }
+function renderLaporan() { if (!DB.transaksi || DB.transaksi.length === 0) { document.getElementById('lap-tbody').innerHTML = '<div>Belum ada transaksi</div>'; return; } let html = '<table style="width:100%;"><thead><tr><th>Tanggal</th><th>Pelanggan</th><th>Total</th><th>Bayar</th></tr></thead><tbody>'; DB.transaksi.slice().reverse().forEach(t => { html += `<tr><td>${t.tanggal || '-'}</td><td>${t.nama || '-'}</td><td>${formatRupiah(t.total)}</td><td>${t.bayar || '-'}</td></tr>`; }); html += '</tbody></table>'; document.getElementById('lap-tbody').innerHTML = html; }
 
-function renderHutang() {
-    const hutangTrx = (DB.transaksi || []).filter(t => t.status === 'hutang' && !t.hutangLunas);
-    const byName = {};
-    hutangTrx.forEach(t => { byName[t.nama] = (byName[t.nama] || 0) + t.total; });
-    let html = '';
-    if (Object.keys(byName).length === 0) html = '<div style="color:#3dd68c;">✅ Semua hutang sudah lunas</div>';
-    else Object.entries(byName).forEach(([nama, total]) => { html += `<div style="padding:10px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between; align-items:center;"><div><strong>${nama}</strong><br><span style="font-size:12px; color:#7d8590;">Total hutang</span></div><div style="color:#f0a050;">${formatRupiah(total)}</div></div>`; });
-    document.getElementById('hutang-list').innerHTML = html;
-}
+function showPage(page) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(`page-${page}`).classList.add('active'); if (page === 'dashboard') renderDashboard(); if (page === 'pelanggan') renderPelanggan(); if (page === 'hutang') renderHutang(); if (page === 'laporan') renderLaporan(); }
 
-function renderLaporan() {
-    if (!DB.transaksi || DB.transaksi.length === 0) { document.getElementById('lap-tbody').innerHTML = '<div style="color:#7d8590;">Belum ada transaksi</div>'; return; }
-    let html = '<table class="data-table"><thead><tr><th>Tanggal</th><th>Pelanggan</th><th>Subtotal</th><th>Ongkir</th><th>Total</th><th>Bayar</th><th>Status</th></tr></thead><tbody>';
-    DB.transaksi.slice().reverse().forEach(t => { html += `<tr><td>${t.tanggal || '-'}</td><td>${t.nama || '-'}</td><td>${formatRupiah(t.subtotal || t.total)}</td><td>${t.ongkir ? formatRupiah(t.ongkir) : '-'}</td><td style="color:#00e5c0;">${formatRupiah(t.total)}</td><td>${t.bayar || '-'}</td><td>${t.status === 'lunas' ? '✅ Lunas' : '📒 Hutang'}</td></tr>`; });
-    html += '</tbody></table>';
-    document.getElementById('lap-tbody').innerHTML = html;
-}
-
-// ========== PRINTER BLUETOOTH ==========
-let bluetoothDevice = null;
-let bluetoothCharacteristic = null;
-
-async function connectBluetoothPrinter() {
-    try {
-        if (!('bluetooth' in navigator)) { showToast('❌ Browser tidak support Bluetooth.', true); return; }
-        showToast('🔍 Mencari printer Bluetooth...');
-        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: false, filters: [{ namePrefix: 'XPrinter' }, { namePrefix: 'BT Printer' }, { namePrefix: 'Thermal' }, { namePrefix: '58mm' }, { namePrefix: 'Printer' }], optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] });
-        device.addEventListener('gattserverdisconnected', onPrinterDisconnected);
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
-        bluetoothDevice = device;
-        document.getElementById('btnPrint').style.display = 'block';
-        document.getElementById('printerStatus').innerHTML = `✅ Printer ${device.name} siap pakai`;
-        document.getElementById('btnConnectPrinter').innerHTML = '🔌 Printer Terhubung';
-        showToast(`✅ Printer ${device.name} terhubung!`);
-        setTimeout(() => testPrint(), 500);
-    } catch(error) { showToast('❌ Gagal konek printer: ' + error.message, true); }
-}
-
-function onPrinterDisconnected() {
-    showToast('⚠️ Printer terputus.', true);
-    document.getElementById('btnPrint').style.display = 'none';
-    document.getElementById('printerStatus').innerHTML = '⚠️ Printer terputus';
-    document.getElementById('btnConnectPrinter').innerHTML = '🔌 Konek Printer Bluetooth';
-    bluetoothCharacteristic = null;
-    bluetoothDevice = null;
-}
-
-function testPrint() {
-    if (!bluetoothCharacteristic) return;
-    const testData = [0x0A, ...strToBytes('===== TEST PRINT ====='), 0x0A, 0x0A, ...strToBytes('Printer thermal siap digunakan!'), 0x0A, 0x0A, ...strToBytes('DepotPintar - EMBUN LAWU'), 0x0A, 0x0A, 0x0A, 0x0A, 0x1D, 0x56, 0x42, 0x00];
-    sendToPrinter(new Uint8Array(testData));
-    showToast('🖨️ Test print dikirim');
-}
-
-function sendToPrinter(data) { if (!bluetoothCharacteristic) throw new Error('Printer tidak terhubung'); return bluetoothCharacteristic.writeValue(data); }
-function strToBytes(str) { return new TextEncoder().encode(str); }
-function formatRupiahPrinter(angka) { return 'Rp' + (angka || 0).toLocaleString('id-ID'); }
-function getLastTransactionFromDB() { return DB.transaksi && DB.transaksi.length > 0 ? DB.transaksi[DB.transaksi.length - 1] : null; }
-
-async function printStruk() {
-    if (!bluetoothCharacteristic) { showToast('❌ Printer belum konek!', true); return; }
-    const transaksi = getLastTransactionFromDB();
-    if (!transaksi) { showToast('❌ Tidak ada transaksi', true); return; }
-    showToast('🖨️ Mencetak struk...');
-    const commands = [0x1B, 0x40, 0x1B, 0x61, 0x01, 0x1D, 0x21, 0x11, ...strToBytes('\n'), ...strToBytes('DEPOTPINTAR'), 0x0A, 0x1D, 0x21, 0x00, ...strToBytes(DB.settings?.nama_depot || 'EMBUN LAWU'), 0x0A, ...strToBytes('Depot Air Minum'), 0x0A, ...strToBytes('================================'), 0x0A, 0x1B, 0x61, 0x00];
-    commands.push(...strToBytes(`Tanggal  : ${transaksi.tanggal || '-'}`), 0x0A);
-    commands.push(...strToBytes(`Waktu    : ${new Date().toLocaleTimeString('id-ID')}`), 0x0A);
-    commands.push(...strToBytes(`Kasir    : ${transaksi.petugas_nama || 'KHOLID'}`), 0x0A);
-    commands.push(...strToBytes(`Pelanggan: ${transaksi.nama || 'Umum'}`), 0x0A);
-    commands.push(...strToBytes(`Metode   : ${transaksi.bayar || 'tunai'}`), 0x0A);
-    commands.push(...strToBytes('================================'), 0x0A);
-    commands.push(0x1B, 0x45, 0x01, ...strToBytes('Item              Qty  Harga    Sub'), 0x0A, 0x1B, 0x45, 0x00, ...strToBytes('--------------------------------'), 0x0A);
-    if (transaksi.items) transaksi.items.forEach(item => { const nama = (item.nama || 'Produk').slice(0, 14); const qty = item.qty || 0; const harga = item.harga || 0; const subtotal = item.subtotal || (harga * qty); commands.push(...strToBytes(`${nama.padEnd(14)} ${qty}   ${formatRupiahPrinter(harga).padEnd(8)} ${formatRupiahPrinter(subtotal)}`), 0x0A); });
-    commands.push(...strToBytes('================================'), 0x0A);
-    const subtotal = transaksi.subtotal || transaksi.total;
-    commands.push(...strToBytes(`Subtotal   : ${formatRupiahPrinter(subtotal)}`), 0x0A);
-    if (transaksi.ongkir) commands.push(...strToBytes(`Ongkir     : ${formatRupiahPrinter(transaksi.ongkir)}`), 0x0A);
-    commands.push(...strToBytes('--------------------------------'), 0x0A);
-    commands.push(0x1B, 0x45, 0x01, 0x1D, 0x21, 0x11, ...strToBytes(`TOTAL      : ${formatRupiahPrinter(transaksi.total)}`), 0x0A, 0x1D, 0x21, 0x00, 0x1B, 0x45, 0x00);
-    if (transaksi.totalGalon) commands.push(...strToBytes(`Total Galon: ${transaksi.totalGalon} galon`), 0x0A);
-    commands.push(...strToBytes('================================'), 0x0A, 0x0A, 0x1B, 0x61, 0x01, ...strToBytes('Terima Kasih'), 0x0A, ...strToBytes('Telah berbelanja di DepotPintar'), 0x0A, ...strToBytes('Silahkan datang kembali'), 0x0A, 0x0A, 0x0A, 0x0A, 0x1D, 0x56, 0x42, 0x00);
-    await sendToPrinter(new Uint8Array(commands));
-    showToast('✅ Struk berhasil dicetak!');
-}
-
-async function autoPrint() {
-    const autoPrintSetting = document.getElementById('autoPrintSetting');
-    if (autoPrintSetting && autoPrintSetting.checked && bluetoothCharacteristic) { setTimeout(() => printStruk(), 1000); }
-}
-
-function checkBluetoothSupport() { return 'bluetooth' in navigator; }
-
-// ========== PIN LOGIN ==========
-let pendingPIN = '';
-function isPINSet() { const pin = localStorage.getItem('depotpintar_pin'); return pin && pin.length >= 4; }
-function savePIN(pin) { localStorage.setItem('depotpintar_pin', pin); }
-function getPIN() { return localStorage.getItem('depotpintar_pin'); }
-function pinInput(num) { if (pendingPIN.length >= 6) return; pendingPIN += num; document.getElementById('pinInput').value = '*'.repeat(pendingPIN.length); }
-function pinDelete() { pendingPIN = pendingPIN.slice(0, -1); document.getElementById('pinInput').value = '*'.repeat(pendingPIN.length); }
-function pinLogin() {
-    if (!isPINSet()) {
-        if (pendingPIN.length < 4) { alert('PIN minimal 4 digit!'); return; }
-        savePIN(pendingPIN); alert('✅ PIN berhasil dibuat!');
-        document.getElementById('pinPage').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        loadAllData(); checkBluetoothSupport();
-    } else {
-        if (pendingPIN === getPIN()) {
-            document.getElementById('pinPage').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            loadAllData(); checkBluetoothSupport();
-        } else { alert('❌ PIN salah!'); pendingPIN = ''; document.getElementById('pinInput').value = ''; }
-    }
-}
-function setupNewPIN() {
-    const currentPIN = getPIN();
-    if (currentPIN) { const oldPIN = prompt('Masukkan PIN lama:'); if (oldPIN !== currentPIN) { alert('PIN lama salah!'); return; } }
-    const newPIN = prompt('Buat PIN baru (4-6 digit angka):');
-    if (!newPIN) return;
-    if (newPIN.length < 4) { alert('PIN minimal 4 digit!'); return; }
-    if (!/^\d+$/.test(newPIN)) { alert('PIN harus angka saja!'); return; }
-    savePIN(newPIN); alert('PIN berhasil diganti!');
-}
-function gantiPIN() { setupNewPIN(); }
-function showPage(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(`page-${page}`).classList.add('active');
-    if (page === 'dashboard') renderDashboard();
-    if (page === 'pelanggan') renderPelanggan();
-    if (page === 'hutang') renderHutang();
-    if (page === 'laporan') renderLaporan();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM Loaded');
-    const savedPIN = localStorage.getItem('depotpintar_pin');
-    if (savedPIN && savedPIN.length >= 4) {
-        document.getElementById('pinPage').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    } else {
-        document.getElementById('pinPage').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    }
-    document.addEventListener('click', (e) => {
-        const sidebar = document.getElementById('sidebar');
-        const menuBtn = document.querySelector('.menu-toggle');
-        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
-            if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) sidebar.classList.remove('show');
-        }
-    });
-});
+loadAllData();
 </script>
 </body>
 </html>
