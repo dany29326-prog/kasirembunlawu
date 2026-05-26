@@ -1109,41 +1109,42 @@ function resetKasir() {
 // ========== RENDER DASHBOARD ==========
 function renderDashboard() {
     const today = new Date();
-    const todayString = today.toISOString().slice(0, 10);
+    const todayString = today.toISOString().slice(0, 10); // "2026-05-26"
     
-    // Format tanggal hari ini sebagai string yang bisa dibandingkan
-    const todayFormatted = today.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-    }).replace(/,/g, '');
-    
-    console.log('Today:', todayFormatted);
+    console.log('Today string:', todayString);
+    console.log('Total transaksi di DB:', DB.transaksi.length);
     
     // Filter transaksi berdasarkan tanggal hari ini
     const todayTrx = DB.transaksi.filter(t => {
-        let tgl = t.tanggal || '';
-        // Coba format tanggal dari API (Mon May 25 2026)
-        if (tgl.includes('GMT') || tgl.includes('GM')) {
-            const parts = tgl.split(' ');
-            if (parts.length >= 4) {
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                const month = monthNames.indexOf(parts[1]) + 1;
-                const day = parseInt(parts[2]);
-                const year = parseInt(parts[3]);
-                const formatted = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                return formatted === todayString;
-            }
+        let tgl = (t.tanggal || '').trim();
+        
+        // Format dari Google Sheet: "2026-05-26" atau "2026-05-26T03:25:27.980Z"
+        // Ambil 10 karakter pertama untuk dapat YYYY-MM-DD
+        const tglSimple = tgl.slice(0, 10);
+        const match = tglSimple === todayString;
+        
+        if (match) {
+            console.log('Transaksi hari ini:', t.id, t.nama, t.total, t.totalGalon);
         }
-        return tgl.slice(0, 10) === todayString;
+        
+        return match;
     });
+    
+    console.log('Transaksi hari ini:', todayTrx.length);
     
     // Hitung omset (hanya status lunas)
     const omset = todayTrx.filter(t => t.status === 'lunas').reduce((s, t) => s + (t.total || 0), 0);
     
-    // Hitung galon terjual
-    const galon = todayTrx.reduce((s, t) => s + (t.totalGalon || 0), 0);
+    // Hitung galon terjual - cek dari items array jika totalGalon tidak ada
+    const galon = todayTrx.reduce((s, t) => {
+        if (t.totalGalon) return s + t.totalGalon;
+        // Fallback: hitung dari items
+        if (t.items) {
+            const items = typeof t.items === 'string' ? JSON.parse(t.items) : t.items;
+            return s + items.filter(i => i.satuan === 'galon').reduce((sum, i) => sum + i.qty, 0);
+        }
+        return s;
+    }, 0);
     
     // Hitung total hutang
     const hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s, t) => s + (t.total || 0), 0);
@@ -1155,14 +1156,14 @@ function renderDashboard() {
     document.getElementById('dash-hutang').innerText = formatRupiah(hutang);
     document.getElementById('dash-pelanggan').innerText = DB.pelanggan.length;
     
-    // Tampilkan transaksi terbaru
+    // Tampilkan transaksi terbaru (hari ini)
     let html = '';
     if (todayTrx.length === 0) {
         html = '<div style="color:#7d8590;">Belum ada transaksi hari ini</div>';
     } else {
-        todayTrx.slice(0, 5).forEach(t => {
+        todayTrx.slice(0, 10).forEach(t => {
             html += `<div style="padding:8px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between;">
-                        <span>${t.nama}</span>
+                        <span>${t.nama} <span style="font-size:11px; color:#7d8590;">${t.bayar || ''}</span></span>
                         <span style="color:#00e5c0;">${formatRupiah(t.total)}</span>
                     </div>`;
         });
