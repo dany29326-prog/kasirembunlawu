@@ -232,6 +232,104 @@
                 color: black !important;
             }
         }
+
+        /* CSS Tambahan Pengaturan */
+        .flex-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .flex-col {
+            flex: 1;
+            min-width: 250px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            background: #161b22;
+        }
+        .table-input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 0;
+            transition: all 0.2s;
+        }
+        .table-input:focus {
+            border-color: #00e5c0;
+            outline: none;
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .badge-success { background: rgba(61,214,140,0.15); color: #3dd68c; }
+        .badge-danger { background: rgba(240,92,92,0.15); color: #f05c5c; }
+        
+        .btn-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        /* Switch Toggle Premium */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #1f242c;
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid #30363d;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #7d8590;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: rgba(0, 229, 192, 0.15);
+            border-color: #00e5c0;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background-color: #00e5c0;
+        }
     </style>
 </head>
 <body>
@@ -254,6 +352,7 @@
         <div class="nav-item" onclick="showPage('pelanggan'); toggleSidebar(false)">👥 Pelanggan</div>
         <div class="nav-item" onclick="showPage('hutang'); toggleSidebar(false)">📒 Hutang</div>
         <div class="nav-item" onclick="showPage('laporan'); toggleSidebar(false)">📈 Laporan</div>
+        <div class="nav-item" onclick="showPage('pengaturan'); toggleSidebar(false)">⚙️ Pengaturan</div>
     </nav>
     
     <!-- Box Sinkronisasi Offline di bawah sidebar (margin-top: auto) -->
@@ -327,7 +426,126 @@
             <div style="overflow-x:auto;"><div id="lap-tbody">Loading...</div></div>
         </div>
     </div>
+
+    <!-- Halaman Pengaturan (Settings Page) -->
+    <div id="page-pengaturan" class="page">
+        <!-- 1. Pengaturan Depot -->
+        <div class="card">
+            <div class="card-title">⚙️ Profil Depot</div>
+            <div class="inline-input">
+                <div class="input-group">
+                    <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Nama Depot Air Minum</label>
+                    <input type="text" id="set-nama-depot" placeholder="Masukkan nama depot" style="margin-bottom:0;">
+                </div>
+                <button onclick="simpanNamaDepot()" style="padding:10px 20px;background:#00e5c0;color:#0d1117;border:none;border-radius:8px;font-weight:bold;">💾 Simpan</button>
+            </div>
+        </div>
+        
+        <div class="flex-row">
+            <!-- 2. Kelola Produk -->
+            <div class="card flex-col" style="flex:2;">
+                <div class="btn-action-row">
+                    <div class="card-title" style="margin-bottom:0;">🛒 Kelola Produk</div>
+                    <button class="btn-modal btn-modal-primary" style="padding:6px 12px;font-size:12px;flex:none;" onclick="bukaModalProduk()">➕ Tambah Produk</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Harga Beli</th>
+                                <th>Harga Jual</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="set-produk-tbody">
+                            <!-- Dinamis via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button onclick="simpanPerubahanProduk()" style="width:100%;margin-top:15px;padding:12px;background:#00e5c0;color:#0d1117;border:none;border-radius:8px;font-weight:bold;font-size:14px;">💾 Simpan Semua Perubahan Harga & Status</button>
+            </div>
+            
+            <!-- 3. Kelola Petugas -->
+            <div class="card flex-col">
+                <div class="btn-action-row">
+                    <div class="card-title" style="margin-bottom:0;">👥 Kelola Petugas</div>
+                    <button class="btn-modal btn-modal-primary" style="padding:6px 12px;font-size:12px;flex:none;" onclick="bukaModalPetugas()">➕ Tambah</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th style="text-align:right;">Hapus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="set-petugas-tbody">
+                            <!-- Dinamis via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
+
+<!-- Modal Tambah/Edit Produk -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🛒 Tambah Produk Baru</h2>
+            <button onclick="tutupModalProduk()" style="background:transparent; border:none; color:#7d8590; font-size:20px; cursor:pointer; font-weight:bold;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Nama Produk</label>
+            <input type="text" id="prod-nama" placeholder="Contoh: Galon Alkaline">
+            
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Icon Emoji</label>
+            <input type="text" id="prod-icon" placeholder="Contoh: 💧" value="💧">
+            
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Satuan</label>
+            <select id="prod-satuan">
+                <option value="galon">galon</option>
+                <option value="dus">dus</option>
+                <option value="pcs">pcs</option>
+                <option value="botol">botol</option>
+            </select>
+            
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Harga Beli (Rp)</label>
+            <input type="number" id="prod-harga-beli" placeholder="Contoh: 3000" value="0">
+            
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Harga Jual (Rp)</label>
+            <input type="number" id="prod-harga" placeholder="Contoh: 6000" value="0">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-secondary" onclick="tutupModalProduk()">Batal</button>
+            <button class="btn-modal btn-modal-primary" onclick="simpanProdukBaru()">Tambah Produk</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Petugas -->
+<div id="petugasModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>👥 Tambah Petugas Baru</h2>
+            <button onclick="tutupModalPetugas()" style="background:transparent; border:none; color:#7d8590; font-size:20px; cursor:pointer; font-weight:bold;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Nama Lengkap</label>
+            <input type="text" id="pet-nama" placeholder="Contoh: AHMAD">
+            
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Jabatan</label>
+            <input type="text" id="pet-jabatan" placeholder="Contoh: Kasir" value="Kasir">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-secondary" onclick="tutupModalPetugas()">Batal</button>
+            <button class="btn-modal btn-modal-primary" onclick="simpanPetugasBaru()">Tambah Petugas</button>
+        </div>
+    </div>
+</div>
 
 <!-- Modal Struk Nota Belanja -->
 <div id="receiptModal" class="modal">
@@ -454,9 +672,9 @@ async function loadAllData() {
         try { res = await callAPI('getAllData'); console.log('API Response:', res); }
         catch(apiError) { console.warn('API gagal:', apiError); showToast('⚠️ Menggunakan data offline', true); res = getDummyData(); }
         if (res.status === 'ok' && res.data) { DB = res.data; }
-        else if (res.status === 'ok' && res.produk) { DB.produk = res.produk || []; DB.settings = { nama_depot: 'EMBUN LAWU' }; DB.petugas = [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]; }
+        else if (res.status === 'ok' && res.produk) { DB.produk = res.produk || []; DB.settings = res.settings || { nama_depot: 'EMBUN LAWU' }; DB.petugas = res.petugas || [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]; }
         else { throw new Error('Data format invalid'); }
-        if (!DB.produk) DB.produk = [];
+        if (!DB.produk || DB.produk.length === 0) DB.produk = getDefaultProducts();
         const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
         const select = document.getElementById('selectPetugas');
         if (select) {
@@ -465,7 +683,7 @@ async function loadAllData() {
             else { select.innerHTML += '<option value="P001">👤 KHOLID</option>'; DB.petugas = [{ id: 'P001', nama: 'KHOLID' }]; }
         }
         renderProdukGrid(); renderDashboard(); renderPelanggan(); renderHutang(); renderLaporan();
-        if (DB.settings && DB.settings.nama_depot) document.getElementById('namaDepot').innerText = DB.settings.nama_depot;
+        if (DB.settings && DB.settings.nama_depot) document.getElementById('namaDepot').innerHTML = '<strong>' + DB.settings.nama_depot + '</strong>';
         updateOfflineStatus();
         showToast(`✅ ${aktifProduk.length} produk siap digunakan`);
     } catch(error) {
@@ -478,7 +696,7 @@ async function loadAllData() {
 function renderProdukGrid() {
     const grid = document.getElementById('produk-grid');
     if (!grid) return;
-    const aktifProduk = DB.produk.filter(p => p.is_active === true);
+    const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
     let html = '';
     const products = aktifProduk.length > 0 ? aktifProduk : getDefaultProducts();
     products.forEach(p => {
@@ -888,7 +1106,7 @@ function showPage(page) {
         if (navItem) navItem.classList.add('active');
     } else {
         const navItems = document.querySelectorAll('.nav-item');
-        const pageIndexMap = { 'dashboard': 0, 'kasir': 1, 'pelanggan': 2, 'hutang': 3, 'laporan': 4 };
+        const pageIndexMap = { 'dashboard': 0, 'kasir': 1, 'pelanggan': 2, 'hutang': 3, 'laporan': 4, 'pengaturan': 5 };
         const idx = pageIndexMap[page];
         if (idx !== undefined && navItems[idx]) {
             navItems[idx].classList.add('active');
@@ -899,6 +1117,7 @@ function showPage(page) {
     if (page === 'pelanggan') renderPelanggan();
     if (page === 'hutang') renderHutang();
     if (page === 'laporan') renderLaporan();
+    if (page === 'pengaturan') renderSettings();
 }
 
 let isSyncing = false;
@@ -973,6 +1192,312 @@ async function sinkronkanTransaksiOffline() {
         showToast(`✅ Berhasil menyinkronkan ${successCount} transaksi offline!`);
         loadAllData();
     }
+}
+
+// ==========================================
+// LOGIKA UTAMA HALAMAN PENGATURAN (SETTINGS)
+// ==========================================
+
+function renderSettings() {
+    const setNamaDepotInput = document.getElementById('set-nama-depot');
+    if (setNamaDepotInput) {
+        setNamaDepotInput.value = DB.settings?.nama_depot || 'EMBUN LAWU';
+    }
+    renderSettingsProduk();
+    renderSettingsPetugas();
+}
+
+function renderSettingsProduk() {
+    const tbody = document.getElementById('set-produk-tbody');
+    if (!tbody) return;
+    
+    let html = '';
+    const products = DB.produk.length > 0 ? DB.produk : getDefaultProducts();
+    products.forEach(p => {
+        const isChecked = (p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True') ? 'checked' : '';
+        html += `
+            <tr data-id="${p.id}">
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:18px;">${p.icon || '💧'}</span>
+                        <div>
+                            <div style="font-weight:bold; color:white;">${p.nama}</div>
+                            <div style="font-size:11px; color:#7d8590;">${p.satuan || 'galon'}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="table-input" value="${p.harga_beli || 0}" style="width:90px;" onchange="updateProductInUI('${p.id}', 'harga_beli', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="table-input" value="${p.harga || 0}" style="width:90px;" onchange="updateProductInUI('${p.id}', 'harga', this.value)">
+                </td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" ${isChecked} onchange="updateProductInUI('${p.id}', 'is_active', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function updateProductInUI(id, field, value) {
+    let p = DB.produk.find(item => item.id === id);
+    if (!p) {
+        const defaults = getDefaultProducts();
+        const foundDefault = defaults.find(item => item.id === id);
+        if (foundDefault) {
+            p = JSON.parse(JSON.stringify(foundDefault));
+            DB.produk.push(p);
+        }
+    }
+    
+    if (p) {
+        if (field === 'harga' || field === 'harga_beli') {
+            p[field] = Number(value) || 0;
+        } else if (field === 'is_active') {
+            p[field] = value;
+        }
+    }
+}
+
+async function simpanNamaDepot() {
+    const input = document.getElementById('set-nama-depot');
+    if (!input) return;
+    const namaDepot = input.value.trim();
+    if (!namaDepot) {
+        showToast('⚠️ Nama depot tidak boleh kosong!', true);
+        return;
+    }
+    
+    showToast('⏳ Menyimpan nama depot...');
+    try {
+        const res = await callAPI('updateSettings', {
+            action: 'updateSettings',
+            settings: { nama_depot: namaDepot }
+        });
+        
+        if (res.status === 'ok') {
+            if (!DB.settings) DB.settings = {};
+            DB.settings.nama_depot = namaDepot;
+            
+            const namaDepotEl = document.getElementById('namaDepot');
+            if (namaDepotEl) {
+                namaDepotEl.innerHTML = '<strong>' + namaDepot + '</strong>';
+            }
+            showToast('✅ Nama depot berhasil diubah!');
+        } else {
+            showToast('❌ Gagal menyimpan nama depot', true);
+        }
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+}
+
+async function simpanPerubahanProduk() {
+    showToast('⏳ Menyimpan seluruh perubahan produk...');
+    let successCount = 0;
+    let failed = false;
+    
+    for (let p of DB.produk) {
+        try {
+            const res = await callAPI('saveProduct', {
+                action: 'saveProduct',
+                product: p
+            });
+            if (res.status === 'ok') {
+                successCount++;
+            } else {
+                failed = true;
+            }
+        } catch (e) {
+            failed = true;
+        }
+    }
+    
+    if (failed) {
+        showToast('⚠️ Beberapa produk gagal disimpan, periksa koneksi', true);
+    } else {
+        showToast(`✅ Berhasil menyimpan ${successCount} produk!`);
+    }
+    
+    renderProdukGrid();
+    renderSettingsProduk();
+}
+
+// Modal Tambah/Edit Produk
+function bukaModalProduk() {
+    document.getElementById('productModal').classList.add('show');
+}
+
+function tutupModalProduk() {
+    document.getElementById('productModal').classList.remove('show');
+    document.getElementById('prod-nama').value = '';
+    document.getElementById('prod-icon').value = '💧';
+    document.getElementById('prod-satuan').value = 'galon';
+    document.getElementById('prod-harga-beli').value = '0';
+    document.getElementById('prod-harga').value = '0';
+}
+
+async function simpanProdukBaru() {
+    const nama = document.getElementById('prod-nama').value.trim();
+    const icon = document.getElementById('prod-icon').value.trim();
+    const satuan = document.getElementById('prod-satuan').value;
+    const harga_beli = parseInt(document.getElementById('prod-harga-beli').value) || 0;
+    const harga = parseInt(document.getElementById('prod-harga').value) || 0;
+    
+    if (!nama) {
+        showToast('⚠️ Nama produk tidak boleh kosong!', true);
+        return;
+    }
+    
+    const newId = 'P' + (DB.produk.length + 1).toString().padStart(3, '0');
+    const newProduct = {
+        id: newId,
+        nama: nama,
+        icon: icon || '💧',
+        satuan: satuan || 'galon',
+        harga_beli: harga_beli,
+        harga: harga,
+        stok: 0,
+        is_active: true
+    };
+    
+    showToast('⏳ Menambahkan produk baru...');
+    try {
+        const res = await callAPI('saveProduct', {
+            action: 'saveProduct',
+            product: newProduct
+        });
+        
+        if (res.status === 'ok') {
+            DB.produk.push(newProduct);
+            tutupModalProduk();
+            renderSettingsProduk();
+            renderProdukGrid();
+            showToast('✅ Produk baru berhasil ditambahkan!');
+        } else {
+            showToast('❌ Gagal menambahkan produk ke server', true);
+        }
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+}
+
+// Modal Tambah Petugas
+function bukaModalPetugas() {
+    document.getElementById('petugasModal').classList.add('show');
+}
+
+function tutupModalPetugas() {
+    document.getElementById('petugasModal').classList.remove('show');
+    document.getElementById('pet-nama').value = '';
+    document.getElementById('pet-jabatan').value = 'Kasir';
+}
+
+async function simpanPetugasBaru() {
+    const nama = document.getElementById('pet-nama').value.trim().toUpperCase();
+    const jabatan = document.getElementById('pet-jabatan').value.trim();
+    
+    if (!nama) {
+        showToast('⚠️ Nama petugas tidak boleh kosong!', true);
+        return;
+    }
+    
+    const newId = 'P' + (DB.petugas.length + 1).toString().padStart(3, '0');
+    const newPetugas = {
+        id: newId,
+        nama: nama,
+        jabatan: jabatan || 'Kasir'
+    };
+    
+    showToast('⏳ Menambahkan petugas baru...');
+    try {
+        const res = await callAPI('savePetugas', {
+            action: 'savePetugas',
+            petugas: newPetugas
+        });
+        
+        if (res.status === 'ok') {
+            if (!DB.petugas) DB.petugas = [];
+            DB.petugas.push(newPetugas);
+            tutupModalPetugas();
+            renderSettingsPetugas();
+            
+            const select = document.getElementById('selectPetugas');
+            if (select) {
+                select.innerHTML = '<option value="">-- Pilih Petugas --</option>';
+                DB.petugas.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`;
+                });
+            }
+            showToast('✅ Petugas baru berhasil ditambahkan!');
+        } else {
+            showToast('❌ Gagal menambahkan petugas ke server', true);
+        }
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+}
+
+async function hapusPetugas(id) {
+    if (id === 'P001') {
+        showToast('⚠️ Petugas utama (Owner) tidak boleh dihapus!', true);
+        return;
+    }
+    
+    if (!confirm('Apakah Anda yakin ingin menghapus petugas ini?')) return;
+    
+    showToast('⏳ Menghapus petugas...');
+    try {
+        const res = await callAPI('deletePetugas', {
+            action: 'deletePetugas',
+            id: id
+        });
+        
+        if (res.status === 'ok') {
+            DB.petugas = DB.petugas.filter(p => p.id !== id);
+            renderSettingsPetugas();
+            
+            const select = document.getElementById('selectPetugas');
+            if (select) {
+                select.innerHTML = '<option value="">-- Pilih Petugas --</option>';
+                DB.petugas.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`;
+                });
+            }
+            showToast('✅ Petugas berhasil dihapus!');
+        } else {
+            showToast('❌ Gagal menghapus petugas dari server', true);
+        }
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+}
+
+function renderSettingsPetugas() {
+    const tbody = document.getElementById('set-petugas-tbody');
+    if (!tbody) return;
+    
+    let html = '';
+    const staff = DB.petugas && DB.petugas.length > 0 ? DB.petugas : [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
+    staff.forEach(p => {
+        const deleteButton = p.id === 'P001' 
+            ? `<span style="color:#7d8590; font-size:12px;">Utama</span>`
+            : `<button onclick="hapusPetugas('${p.id}')" style="background:#ff3333; color:#ffffff; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold;">🗑️ Hapus</button>`;
+        
+        html += `
+            <tr>
+                <td style="font-weight:bold; color:white;">👤 ${p.nama}</td>
+                <td style="color:#7d8590;">${p.jabatan || 'Kasir'}</td>
+                <td style="text-align:right;">${deleteButton}</td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
 }
 
 // Jalankan sinkronisasi otomatis ketika internet tersambung kembali

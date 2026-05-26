@@ -56,6 +56,18 @@ function doPost(e) {
     } else if (action === 'payDebt') {
       const result = payDebt(data.nama);
       output.setContent(JSON.stringify(result));
+    } else if (action === 'updateSettings') {
+      const result = updateSettings(data.settings);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'saveProduct') {
+      const result = saveProduct(data.product);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'savePetugas') {
+      const result = savePetugas(data.petugas);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'deletePetugas') {
+      const result = deletePetugas(data.id);
+      output.setContent(JSON.stringify(result));
     } else {
       output.setContent(JSON.stringify({ status: 'ok', message: 'API ready' }));
     }
@@ -215,7 +227,7 @@ function getAllDataResponse() {
       settings: settings,
       pelanggan: pelanggan,
       transaksi: transaksi,
-      petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]
+      petugas: getPetugasDariSheet()
     }
   };
 }
@@ -516,6 +528,168 @@ function payDebt(nama) {
     return { status: 'ok', message: 'Sukses melunasi ' + updatedCount + ' transaksi hutang', count: updatedCount };
   } catch(e) {
     logActivity('ERROR', 'payDebt', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== UPDATE SETTINGS ==========
+function updateSettings(settings) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('settings');
+    if (!sheet) {
+      sheet = ss.insertSheet('settings');
+      sheet.appendRow(['key', 'value', 'last_updated']);
+    }
+    
+    Object.entries(settings).forEach(([key, value]) => {
+      const data = sheet.getDataRange().getValues();
+      let found = false;
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === key) {
+          sheet.getRange(i + 1, 2).setValue(value.toString());
+          sheet.getRange(i + 1, 3).setValue(new Date().toISOString());
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        sheet.appendRow([key, value.toString(), new Date().toISOString()]);
+      }
+    });
+    
+    logActivity('UPDATE_SETTINGS', 'Settings Updated', JSON.stringify(settings));
+    return { status: 'ok', message: 'Pengaturan berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'updateSettings', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== SAVE / UPDATE PRODUCT ==========
+function saveProduct(product) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('produk');
+    if (!sheet) {
+      sheet = ss.insertSheet('produk');
+      sheet.appendRow(['id', 'nama', 'icon', 'satuan', 'harga_beli', 'harga', 'stok', 'is_active']);
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    let foundIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === product.id.toString()) {
+        foundIndex = i;
+        break;
+      }
+    }
+    
+    const rowData = [
+      product.id,
+      product.nama,
+      product.icon || '💧',
+      product.satuan || 'galon',
+      Number(product.harga_beli) || 0,
+      Number(product.harga) || 0,
+      Number(product.stok) || 0,
+      product.is_active ? true : false
+    ];
+    
+    if (foundIndex !== -1) {
+      sheet.getRange(foundIndex + 1, 1, 1, 8).setValues([rowData]);
+    } else {
+      sheet.appendRow(rowData);
+    }
+    
+    logActivity('SAVE_PRODUCT', product.id, 'Nama: ' + product.nama + ', Harga: ' + product.harga);
+    return { status: 'ok', message: 'Produk berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'saveProduct', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== GET STAFF FROM SHEET ==========
+function getPetugasDariSheet() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('petugas');
+    if (!sheet) {
+      return [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
+    }
+    
+    const rows = sheet.getDataRange().getValues();
+    const petugas = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[0] && row[0].toString().trim() !== '') {
+        petugas.push({
+          id: row[0].toString(),
+          nama: row[1] || 'Staff',
+          jabatan: row[2] || 'Kasir'
+        });
+      }
+    }
+    return petugas.length > 0 ? petugas : [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
+  } catch(e) {
+    return [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
+  }
+}
+
+// ========== SAVE STAFF ==========
+function savePetugas(p) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('petugas');
+    if (!sheet) {
+      sheet = ss.insertSheet('petugas');
+      sheet.appendRow(['id', 'nama', 'jabatan']);
+      sheet.appendRow(['P001', 'KHOLID', 'Owner']);
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    let foundIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === p.id.toString()) {
+        foundIndex = i;
+        break;
+      }
+    }
+    
+    const rowData = [p.id, p.nama, p.jabatan || 'Kasir'];
+    if (foundIndex !== -1) {
+      sheet.getRange(foundIndex + 1, 1, 1, 3).setValues([rowData]);
+    } else {
+      sheet.appendRow(rowData);
+    }
+    
+    logActivity('SAVE_PETUGAS', p.id, 'Nama: ' + p.nama + ', Jabatan: ' + p.jabatan);
+    return { status: 'ok', message: 'Petugas berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'savePetugas', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== DELETE STAFF ==========
+function deletePetugas(id) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('petugas');
+    if (!sheet) return { status: 'error', message: 'Sheet petugas tidak ditemukan' };
+    
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === id.toString()) {
+        sheet.deleteRow(i + 1);
+        logActivity('DELETE_PETUGAS', id, 'Berhasil menghapus petugas');
+        return { status: 'ok', message: 'Petugas berhasil dihapus' };
+      }
+    }
+    return { status: 'error', message: 'Petugas tidak ditemukan' };
+  } catch(e) {
+    logActivity('ERROR', 'deletePetugas', e.toString());
     return { status: 'error', message: e.toString() };
   }
 }
