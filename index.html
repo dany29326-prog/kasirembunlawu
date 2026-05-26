@@ -457,6 +457,21 @@
         .inline-input .input-group {
             flex: 1;
         }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #30363d;
+            border-top-color: #00e5c0;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -616,7 +631,29 @@ let cart = {};
 let payMethod = 'tunai';
 let currentPetugas = null;
 let isLoading = false;
-let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
+let ongkir = 0;
+
+// ========== FUNGSI PRODUK DEFAULT (TERPUSAT) ==========
+function getDefaultProducts() {
+    return [
+        { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
+        { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
+        { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
+        { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
+        { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+    ];
+}
+
+// Cari produk berdasarkan ID (dari DB atau default)
+function findProductById(productId) {
+    // Cari dari DB.produk dulu
+    let product = DB.produk.find(p => p.id === productId);
+    if (product) return product;
+    
+    // Jika tidak ada, cari dari default products
+    const defaultProducts = getDefaultProducts();
+    return defaultProducts.find(p => p.id === productId);
+}
 
 // ========== HELPER FUNCTIONS ==========
 function formatRupiah(angka) {
@@ -691,11 +728,16 @@ async function callAPI(action, data = {}) {
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            return { status: 'ok', message: 'success' };
+            
+            // Baca response sebagai JSON
+            const result = await response.json();
+            console.log('POST Response:', result);
+            return result;
+            
         } catch(e) {
             console.error('POST Error:', e);
             return { status: 'error', message: e.message };
@@ -708,13 +750,7 @@ function getDummyData() {
     return {
         status: 'ok',
         data: {
-            produk: [
-                { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-                { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-                { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-                { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-                { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-            ],
+            produk: getDefaultProducts(),
             pelanggan: [],
             transaksi: [],
             petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
@@ -827,13 +863,7 @@ function renderProdukGrid() {
     const aktifProduk = DB.produk.filter(p => p.is_active === true);
     
     if (aktifProduk.length === 0) {
-        const defaultProducts = [
-            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-            { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-            { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-        ];
+        const defaultProducts = getDefaultProducts();
         
         let html = '';
         defaultProducts.forEach(p => {
@@ -890,17 +920,7 @@ function updateSummary() {
     let html = '';
     
     for (let id in cart) {
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { nama: 'Galon Biasa', icon: '💧', harga: 6000 },
-                'd2': { nama: 'Galon RO', icon: '💧✨', harga: 10000 },
-                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 },
-                'd4': { nama: 'Ultra 330ml', icon: '🧃', harga: 1700 },
-                'd5': { nama: 'Ultra 600ml', icon: '🧃', harga: 2000 }
-            };
-            p = defaultProducts[id];
-        }
+        let p = findProductById(id);
         
         if (p) {
             const subtotalItem = p.harga * cart[id];
@@ -972,17 +992,7 @@ async function prosesTransaksi() {
     
     const items = [];
     for (let id in cart) {
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
-                'd2': { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
-                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 },
-                'd4': { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700 },
-                'd5': { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000 }
-            };
-            p = defaultProducts[id];
-        }
+        let p = findProductById(id);
         
         if (p && cart[id] > 0) {
             items.push({
@@ -1005,13 +1015,24 @@ async function prosesTransaksi() {
     const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
     const total = subtotal + ongkir;
     const totalGalon = items.filter(i => i.satuan === 'galon').reduce((s, i) => s + i.qty, 0);
-    const nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
+    
+    const namaInput = document.getElementById('kasir-nama').value.trim();
     const wa = document.getElementById('kasir-wa').value.trim();
     
-    if (payMethod === 'hutang' && nama === 'Umum') {
-        showToast('❌ Masukkan nama pelanggan untuk transaksi hutang!', true);
-        return;
+    // Validasi hutang - TIDAK BOLEH "Umum" atau kosong
+    if (payMethod === 'hutang') {
+        if (!namaInput || namaInput === '' || namaInput.toLowerCase() === 'umum' || namaInput.toLowerCase() === 'guest') {
+            showToast('❌ Transaksi hutang WAJIB menggunakan nama pelanggan yang valid!', true);
+            return;
+        }
+        if (namaInput.length < 3) {
+            showToast('❌ Nama pelanggan minimal 3 karakter!', true);
+            return;
+        }
     }
+    
+    // Untuk transaksi tunai/QRIS, default 'Umum' boleh dipakai
+    const finalNama = namaInput || 'Umum';
     
     const trx = {
         id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1019,7 +1040,7 @@ async function prosesTransaksi() {
         waktu: new Date().toISOString(),
         petugas_id: currentPetugas.id,
         petugas_nama: currentPetugas.nama,
-        nama: nama,
+        nama: finalNama,
         wa: wa,
         items: items,
         ongkir: ongkir,
@@ -1070,6 +1091,17 @@ async function prosesTransaksi() {
 }
 
 function resetKasir() {
+    // Hitung total item di cart
+    const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    
+    if (totalItems > 0 || ongkir > 0) {
+        const confirmed = confirm(`⚠️ Yakin ingin mereset kasir?\n\n📦 ${totalItems} item akan dihapus\n🚚 Ongkir Rp${ongkir.toLocaleString()} akan direset\n\nSemua data pesanan akan hilang!`);
+        
+        if (!confirmed) {
+            return;
+        }
+    }
+    
     cart = {};
     ongkir = 0;
     document.getElementById('ongkir-input').value = 0;
@@ -1083,16 +1115,6 @@ function resetKasir() {
 function renderDashboard() {
     const today = new Date();
     const todayString = today.toISOString().slice(0, 10);
-    
-    // Format tanggal hari ini sebagai string yang bisa dibandingkan
-    const todayFormatted = today.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-    }).replace(/,/g, '');
-    
-    console.log('Today:', todayFormatted);
     
     // Filter transaksi berdasarkan tanggal hari ini
     const todayTrx = DB.transaksi.filter(t => {
@@ -1208,7 +1230,7 @@ function renderLaporan() {
                     <td>${t.status === 'lunas' ? '✅ Lunas' : '📒 Hutang'}</td>
                 </tr>`;
     });
-    html += '</tbody></table>';
+    html += '</tbody><table>';
     
     const lapEl = document.getElementById('lap-tbody');
     if (lapEl) lapEl.innerHTML = html;
