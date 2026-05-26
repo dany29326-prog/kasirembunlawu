@@ -1,3 +1,4 @@
+index.html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -457,21 +458,6 @@
         .inline-input .input-group {
             flex: 1;
         }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #30363d;
-            border-top-color: #00e5c0;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -617,7 +603,7 @@
 <script>
 // ========== KONFIGURASI ==========
 // !!! GANTI DENGAN URL APPS SCRIPT ANDA YANG SUDAH DI-DEPLOY !!!
-const API_URL = 'https://script.google.com/macros/s/AKfycbxZVDhQNOddnCQmgB9vS9rpPDs_fFCMRnII9atwDCptT64oJL4qtV4WriWfqeO4SEkBSg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyH3Mc4K1NVDx9CHVLyDdxPKY2SHirjjVPI_mtOnBDohTXYB3XxC_AMWG6VDK3go7EFqg/exec';
 
 // ========== GLOBAL VARIABLES ==========
 let DB = { 
@@ -631,29 +617,7 @@ let cart = {};
 let payMethod = 'tunai';
 let currentPetugas = null;
 let isLoading = false;
-let ongkir = 0;
-
-// ========== FUNGSI PRODUK DEFAULT (TERPUSAT) ==========
-function getDefaultProducts() {
-    return [
-        { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-        { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-        { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-        { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-        { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-    ];
-}
-
-// Cari produk berdasarkan ID (dari DB atau default)
-function findProductById(productId) {
-    // Cari dari DB.produk dulu
-    let product = DB.produk.find(p => p.id === productId);
-    if (product) return product;
-    
-    // Jika tidak ada, cari dari default products
-    const defaultProducts = getDefaultProducts();
-    return defaultProducts.find(p => p.id === productId);
-}
+let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
 
 // ========== HELPER FUNCTIONS ==========
 function formatRupiah(angka) {
@@ -693,45 +657,51 @@ function setOngkirDefault() {
 }
 
 // ========== API CALL ==========
-// ========== API CALL (JSONP untuk semua request) ==========
-function callAPI(action, data = {}) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        const script = document.createElement('script');
-        
-        // Buat URL
-        let url = `${API_URL}?action=${action}&callback=${callbackName}&t=${Date.now()}`;
-        
-        // Jika ada data transaksi (saveTransaction), tambahkan ke URL
-        if (action === 'saveTransaction' && data.transaction) {
-            url += `&transaction=${encodeURIComponent(JSON.stringify(data.transaction))}`;
-        }
-        
-        const timeout = setTimeout(() => {
-            if (window[callbackName]) {
+async function callAPI(action, data = {}) {
+    if (action === 'getAllData') {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const script = document.createElement('script');
+            
+            const timeout = setTimeout(() => {
+                if (window[callbackName]) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('Request timeout'));
+                }
+            }, 30000);
+            
+            window[callbackName] = function(response) {
+                clearTimeout(timeout);
                 delete window[callbackName];
                 document.body.removeChild(script);
-                reject(new Error('Request timeout'));
-            }
-        }, 30000);
-        
-        window[callbackName] = function(response) {
-            clearTimeout(timeout);
-            delete window[callbackName];
-            document.body.removeChild(script);
-            console.log('JSONP Response:', response);
-            resolve(response);
-        };
-        
-        script.onerror = () => {
-            clearTimeout(timeout);
-            delete window[callbackName];
-            reject(new Error('Network error'));
-        };
-        
-        script.src = url;
-        document.body.appendChild(script);
-    });
+                console.log('JSONP Response:', response);
+                resolve(response);
+            };
+            
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                reject(new Error('Network error'));
+            };
+            
+            script.src = `${API_URL}?action=getAllData&callback=${callbackName}&t=${Date.now()}`;
+            document.body.appendChild(script);
+        });
+    } else {
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return { status: 'ok', message: 'success' };
+        } catch(e) {
+            console.error('POST Error:', e);
+            return { status: 'error', message: e.message };
+        }
+    }
 }
 
 // ========== DATA DUMMY ==========
@@ -739,7 +709,13 @@ function getDummyData() {
     return {
         status: 'ok',
         data: {
-            produk: getDefaultProducts(),
+            produk: [
+                { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
+                { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
+                { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
+                { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
+                { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+            ],
             pelanggan: [],
             transaksi: [],
             petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
@@ -852,7 +828,13 @@ function renderProdukGrid() {
     const aktifProduk = DB.produk.filter(p => p.is_active === true);
     
     if (aktifProduk.length === 0) {
-        const defaultProducts = getDefaultProducts();
+        const defaultProducts = [
+            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
+            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
+            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
+            { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
+            { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+        ];
         
         let html = '';
         defaultProducts.forEach(p => {
@@ -909,7 +891,17 @@ function updateSummary() {
     let html = '';
     
     for (let id in cart) {
-        let p = findProductById(id);
+        let p = DB.produk.find(p => p.id === id);
+        if (!p) {
+            const defaultProducts = {
+                'd1': { nama: 'Galon Biasa', icon: '💧', harga: 6000 },
+                'd2': { nama: 'Galon RO', icon: '💧✨', harga: 10000 },
+                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 },
+                'd4': { nama: 'Ultra 330ml', icon: '🧃', harga: 1700 },
+                'd5': { nama: 'Ultra 600ml', icon: '🧃', harga: 2000 }
+            };
+            p = defaultProducts[id];
+        }
         
         if (p) {
             const subtotalItem = p.harga * cart[id];
@@ -981,7 +973,17 @@ async function prosesTransaksi() {
     
     const items = [];
     for (let id in cart) {
-        let p = findProductById(id);
+        let p = DB.produk.find(p => p.id === id);
+        if (!p) {
+            const defaultProducts = {
+                'd1': { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
+                'd2': { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
+                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 },
+                'd4': { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700 },
+                'd5': { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000 }
+            };
+            p = defaultProducts[id];
+        }
         
         if (p && cart[id] > 0) {
             items.push({
@@ -1004,24 +1006,13 @@ async function prosesTransaksi() {
     const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
     const total = subtotal + ongkir;
     const totalGalon = items.filter(i => i.satuan === 'galon').reduce((s, i) => s + i.qty, 0);
-    
-    const namaInput = document.getElementById('kasir-nama').value.trim();
+    const nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
     const wa = document.getElementById('kasir-wa').value.trim();
     
-    // Validasi hutang - TIDAK BOLEH "Umum" atau kosong
-    if (payMethod === 'hutang') {
-        if (!namaInput || namaInput === '' || namaInput.toLowerCase() === 'umum' || namaInput.toLowerCase() === 'guest') {
-            showToast('❌ Transaksi hutang WAJIB menggunakan nama pelanggan yang valid!', true);
-            return;
-        }
-        if (namaInput.length < 3) {
-            showToast('❌ Nama pelanggan minimal 3 karakter!', true);
-            return;
-        }
+    if (payMethod === 'hutang' && nama === 'Umum') {
+        showToast('❌ Masukkan nama pelanggan untuk transaksi hutang!', true);
+        return;
     }
-    
-    // Untuk transaksi tunai/QRIS, default 'Umum' boleh dipakai
-    const finalNama = namaInput || 'Umum';
     
     const trx = {
         id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1029,7 +1020,7 @@ async function prosesTransaksi() {
         waktu: new Date().toISOString(),
         petugas_id: currentPetugas.id,
         petugas_nama: currentPetugas.nama,
-        nama: finalNama,
+        nama: nama,
         wa: wa,
         items: items,
         ongkir: ongkir,
@@ -1080,17 +1071,6 @@ async function prosesTransaksi() {
 }
 
 function resetKasir() {
-    // Hitung total item di cart
-    const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
-    
-    if (totalItems > 0 || ongkir > 0) {
-        const confirmed = confirm(`⚠️ Yakin ingin mereset kasir?\n\n📦 ${totalItems} item akan dihapus\n🚚 Ongkir Rp${ongkir.toLocaleString()} akan direset\n\nSemua data pesanan akan hilang!`);
-        
-        if (!confirmed) {
-            return;
-        }
-    }
-    
     cart = {};
     ongkir = 0;
     document.getElementById('ongkir-input').value = 0;
@@ -1104,6 +1084,16 @@ function resetKasir() {
 function renderDashboard() {
     const today = new Date();
     const todayString = today.toISOString().slice(0, 10);
+    
+    // Format tanggal hari ini sebagai string yang bisa dibandingkan
+    const todayFormatted = today.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+    }).replace(/,/g, '');
+    
+    console.log('Today:', todayFormatted);
     
     // Filter transaksi berdasarkan tanggal hari ini
     const todayTrx = DB.transaksi.filter(t => {
@@ -1219,7 +1209,7 @@ function renderLaporan() {
                     <td>${t.status === 'lunas' ? '✅ Lunas' : '📒 Hutang'}</td>
                 </tr>`;
     });
-    html += '</tbody><table>';
+    html += '</tbody></table>';
     
     const lapEl = document.getElementById('lap-tbody');
     if (lapEl) lapEl.innerHTML = html;
