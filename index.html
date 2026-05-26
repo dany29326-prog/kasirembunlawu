@@ -7,7 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
-        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #30363d; min-height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 100; }
+        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #30363d; min-height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 100; display: flex; flex-direction: column; }
         .sidebar-logo { padding: 20px; border-bottom: 1px solid #30363d; }
         .sidebar-logo h1 { color: #00e5c0; font-size: 24px; }
         .sidebar-logo .sub { font-size: 12px; color: #7d8590; margin-top: 5px; font-weight: bold; }
@@ -60,7 +60,7 @@
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #30363d; }
         .data-table th { color: #7d8590; font-weight: normal; }
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
             .main { margin-left: 0; }
@@ -70,7 +70,7 @@
             .ongkir-row input, .ongkir-row button { width: 100%; }
         }
         .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; background: #161b22; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 8px; cursor: pointer; z-index: 101; }
-        @media (max-width: 768px) { .menu-toggle { display: block; } }
+        @media (max-width: 992px) { .menu-toggle { display: block; } }
         .petugas-status { display: inline-block; margin-left: 10px; color: #3dd68c; font-size: 12px; }
         .error-box { background: rgba(240,92,92,0.1); border: 1px solid #f05c5c; border-radius: 8px; padding: 15px; margin: 10px 0; text-align: center; }
         .debug-info { font-size: 11px; color: #7d8590; margin-top: 10px; word-break: break-all; }
@@ -236,18 +236,33 @@
 </head>
 <body>
 <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+
+<!-- Floating Badge Sync Offline untuk Tablet & HP -->
+<div id="floating-offline-indicator" style="position: fixed; top: 15px; right: 15px; background: rgba(240, 160, 80, 0.15); border: 1px solid #f0a050; color: #f0a050; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: bold; display: none; align-items: center; gap: 8px; z-index: 1000; backdrop-filter: blur(4px); cursor: pointer; transition: all 0.3s;" onclick="sinkronkanTransaksiOffline()">
+    <span>⚠️ <span id="floating-offline-count">0</span> Transaksi Offline</span>
+    <span style="font-size: 10px; background: #f0a050; color: #0d1117; padding: 2px 6px; border-radius: 4px; font-weight: bold;">SYNC</span>
+</div>
+
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
         <h1>💧 DepotPintar</h1>
         <div class="sub" id="namaDepot"><strong>EMBUN LAWU</strong></div>
     </div>
-    <nav>
+    <nav style="flex: 1;">
         <div class="nav-item active" onclick="showPage('dashboard'); toggleSidebar(false)">📊 Dashboard</div>
         <div class="nav-item" onclick="showPage('kasir'); toggleSidebar(false)">🧾 Kasir</div>
         <div class="nav-item" onclick="showPage('pelanggan'); toggleSidebar(false)">👥 Pelanggan</div>
         <div class="nav-item" onclick="showPage('hutang'); toggleSidebar(false)">📒 Hutang</div>
         <div class="nav-item" onclick="showPage('laporan'); toggleSidebar(false)">📈 Laporan</div>
     </nav>
+    
+    <!-- Box Sinkronisasi Offline di bawah sidebar (margin-top: auto) -->
+    <div id="sidebar-offline-sync" style="padding: 15px 20px; border-top: 1px solid #30363d; display: none; background: rgba(240, 160, 80, 0.05); transition: all 0.3s;">
+        <div style="font-size: 12px; color: #f0a050; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: bold;">
+            <span>⚠️</span> <span id="offline-count-text">0 Transaksi Offline</span>
+        </div>
+        <button class="btn-modal btn-modal-primary" id="btn-sync-sidebar" onclick="sinkronkanTransaksiOffline()" style="width: 100%; padding: 8px 12px; font-size: 12px; background: #f0a050; color: #0d1117; font-weight: bold; margin: 0;">🔄 Sinkronkan</button>
+    </div>
 </aside>
 <main class="main">
     <div id="page-dashboard" class="page active">
@@ -451,6 +466,7 @@ async function loadAllData() {
         }
         renderProdukGrid(); renderDashboard(); renderPelanggan(); renderHutang(); renderLaporan();
         if (DB.settings && DB.settings.nama_depot) document.getElementById('namaDepot').innerText = DB.settings.nama_depot;
+        updateOfflineStatus();
         showToast(`✅ ${aktifProduk.length} produk siap digunakan`);
     } catch(error) {
         console.error('Load Error:', error);
@@ -547,6 +563,7 @@ async function prosesTransaksi() {
             cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0; renderProdukGrid();
             document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = '';
             tampilkanStruk(trx);
+            updateOfflineStatus();
         }
     } catch(e) {
         let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
@@ -555,6 +572,7 @@ async function prosesTransaksi() {
         cart = {}; ongkir = 0; document.getElementById('ongkir-input').value = 0; renderProdukGrid();
         document.getElementById('kasir-nama').value = ''; document.getElementById('kasir-wa').value = '';
         tampilkanStruk(trx);
+        updateOfflineStatus();
     }
     isProcessing = false;
     if (btnBayar) { btnBayar.disabled = false; btnBayar.style.opacity = '1'; btnBayar.innerText = '✅ BAYAR SEKARANG'; }
@@ -883,13 +901,94 @@ function showPage(page) {
     if (page === 'laporan') renderLaporan();
 }
 
+let isSyncing = false;
+
+function updateOfflineStatus() {
+    const offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
+    const sidebarSyncBox = document.getElementById('sidebar-offline-sync');
+    const sidebarSyncText = document.getElementById('offline-count-text');
+    const floatingIndicator = document.getElementById('floating-offline-indicator');
+    const floatingCountText = document.getElementById('floating-offline-count');
+    
+    if (offlineTrx.length > 0) {
+        if (sidebarSyncBox) sidebarSyncBox.style.display = 'block';
+        if (sidebarSyncText) sidebarSyncText.innerText = `${offlineTrx.length} Transaksi Offline`;
+        if (floatingIndicator) floatingIndicator.style.display = 'flex';
+        if (floatingCountText) floatingCountText.innerText = offlineTrx.length;
+    } else {
+        if (sidebarSyncBox) sidebarSyncBox.style.display = 'none';
+        if (floatingIndicator) floatingIndicator.style.display = 'none';
+    }
+}
+
+async function sinkronkanTransaksiOffline() {
+    if (isSyncing) return;
+    const offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
+    if (offlineTrx.length === 0) {
+        updateOfflineStatus();
+        return;
+    }
+    
+    isSyncing = true;
+    showToast(`⏳ Menyinkronkan ${offlineTrx.length} data offline...`);
+    
+    const btnSidebar = document.getElementById('btn-sync-sidebar');
+    if (btnSidebar) {
+        btnSidebar.disabled = true;
+        btnSidebar.innerText = '⏳ Sinkron...';
+        btnSidebar.style.opacity = '0.7';
+    }
+    
+    let failed = false;
+    let successCount = 0;
+    
+    // Loop untuk mengirim data offline satu per satu
+    while (offlineTrx.length > 0 && !failed) {
+        const trx = offlineTrx[0];
+        try {
+            const res = await callAPI('saveTransaction', { action: 'saveTransaction', transaction: trx });
+            if (res.status === 'ok') {
+                offlineTrx.shift(); // Buang yang sukses dari antrean
+                localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
+                successCount++;
+                updateOfflineStatus();
+            } else {
+                failed = true;
+            }
+        } catch (e) {
+            failed = true;
+        }
+    }
+    
+    isSyncing = false;
+    if (btnSidebar) {
+        btnSidebar.disabled = false;
+        btnSidebar.innerText = '🔄 Sinkronkan';
+        btnSidebar.style.opacity = '1';
+    }
+    
+    if (failed) {
+        showToast('⚠️ Koneksi masih terputus, sinkronisasi terhenti', true);
+    } else {
+        showToast(`✅ Berhasil menyinkronkan ${successCount} transaksi offline!`);
+        loadAllData();
+    }
+}
+
+// Jalankan sinkronisasi otomatis ketika internet tersambung kembali
+window.addEventListener('online', () => {
+    showToast('⚡ Internet terhubung! Sinkronisasi otomatis berjalan...', false);
+    sinkronkanTransaksiOffline();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
+    updateOfflineStatus();
     
     document.addEventListener('click', (e) => {
         const sidebar = document.getElementById('sidebar');
         const menuBtn = document.querySelector('.menu-toggle');
-        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
+        if (window.innerWidth <= 992 && sidebar && sidebar.classList.contains('show')) {
             if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
                 sidebar.classList.remove('show');
             }
