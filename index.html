@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>DepotPintar - Depot Air Minum EMBUN LAWU</title>
     <style>
+        /* [STYLE SAMA PERSIS SEPERTI YANG ANDA PUNYA] */
         * {
             margin: 0;
             padding: 0;
@@ -822,157 +823,210 @@ function setOngkirDefault() {
     showToast('🚚 Ongkir diatur Rp5.000');
 }
 
-// ========== API CALL ==========
+// ========== API CALL YANG DIPERBAIKI ==========
 async function callAPI(action, data = {}) {
-    if (action === 'getAllData') {
-        // Langsung panggil API dengan fetch
-        try {
-            const response = await fetch(`${API_URL}?action=getAllData&t=${Date.now()}`, {
+    console.log(`📡 callAPI: ${action}`, data);
+    
+    try {
+        if (action === 'getAllData') {
+            // Method GET dengan cache buster
+            const url = `${API_URL}?action=getAllData&t=${Date.now()}`;
+            console.log('🌐 Fetching:', url);
+            
+            const response = await fetch(url, {
                 method: 'GET',
+                mode: 'cors',
                 headers: {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
                 }
             });
             
+            console.log('📥 Response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error('HTTP error ' + response.status);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const text = await response.text();
+            console.log('📄 Raw response length:', text.length);
+            console.log('📄 Raw response preview:', text.substring(0, 200));
+            
+            // Parse JSON
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch(e) {
+                console.error('JSON Parse error:', e);
+                throw new Error('Invalid JSON response from server');
+            }
+            
+            console.log('✅ Parsed result:', result);
+            
+            // Handle different response formats
+            if (result.status === 'ok') {
+                if (result.data) {
+                    // Format: {status: 'ok', data: {produk: [], ...}}
+                    return result.data;
+                } else if (result.produk) {
+                    // Format: {status: 'ok', produk: [], ...}
+                    return result;
+                } else {
+                    // Unknown format but status ok
+                    return result;
+                }
+            } else {
+                throw new Error(result.message || 'API returned error status');
+            }
+            
+        } else if (action === 'saveTransaction') {
+            // POST untuk save transaction
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'saveTransaction',
+                    transaction: data.transaction
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
             
             const result = await response.json();
-            console.log('API Response:', result);
+            console.log('✅ Save result:', result);
             return result;
-            
-        } catch(error) {
-            console.error('Fetch error:', error);
-            
-            // Fallback ke JSONP
-            return new Promise((resolve, reject) => {
-                const callbackName = 'jsonp_callback_' + Date.now();
-                const script = document.createElement('script');
-                
-                const timeout = setTimeout(() => {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    reject(new Error('Timeout'));
-                }, 15000);
-                
-                window[callbackName] = function(response) {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    resolve(response);
-                };
-                
-                script.src = `${API_URL}?action=getAllData&callback=${callbackName}&t=${Date.now()}`;
-                document.body.appendChild(script);
-            });
         }
-    } else {
-        // POST untuk saveTransaction
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            return await response.json();
-        } catch(e) {
-            console.error('POST Error:', e);
-            return { status: 'error', message: e.message };
-        }
+        
+    } catch(error) {
+        console.error('❌ API Error:', error);
+        throw error;
     }
 }
 
 // ========== DATA DUMMY ==========
 function getDummyData() {
     return {
-        status: 'ok',
-        data: {
-            produk: [
-                { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-                { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-                { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-                { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-                { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-            ],
-            pelanggan: [],
-            transaksi: [],
-            petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
-            settings: { nama_depot: 'EMBUN LAWU' }
-        }
+        produk: [
+            { id: 'P001', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
+            { id: 'P002', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
+            { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
+            { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
+            { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
+        ],
+        pelanggan: [],
+        transaksi: [],
+        petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
+        settings: { nama_depot: 'EMBUN LAWU' }
     };
 }
 
-// ========== LOAD DATA ==========
+// ========== LOAD DATA YANG DIPERBAIKI ==========
 async function loadAllData() {
-    if (isLoading) return;
+    if (isLoading) {
+        console.log('Already loading, skipping...');
+        return;
+    }
     isLoading = true;
     
     showToast('🔄 Mengambil data dari server...');
+    console.log('🚀 Starting loadAllData...');
     
     try {
-        let res;
+        let apiData;
         try {
-            res = await callAPI('getAllData');
-            console.log('API Response:', res);
+            apiData = await callAPI('getAllData');
+            console.log('✅ API Data received:', apiData);
+            
+            // Extract data from response
+            if (apiData && apiData.data) {
+                DB = apiData.data;
+            } else if (apiData && apiData.produk) {
+                DB.produk = apiData.produk || [];
+                DB.settings = apiData.settings || { nama_depot: 'EMBUN LAWU' };
+                DB.pelanggan = apiData.pelanggan || [];
+                DB.transaksi = apiData.transaksi || [];
+                DB.petugas = apiData.petugas || [{ id: 'P001', nama: 'KHOLID' }];
+            } else if (apiData && typeof apiData === 'object') {
+                // Try to use whatever we got
+                DB = { ...DB, ...apiData };
+            } else {
+                throw new Error('Invalid data format');
+            }
+            
+            // Ensure produk is array
+            if (!DB.produk) DB.produk = [];
+            
+            // Filter active products
+            const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
+            console.log(`✅ Loaded: ${aktifProduk.length} produk aktif from API`);
+            
+            if (aktifProduk.length === 0 && DB.produk.length > 0) {
+                console.warn('No active products, but have', DB.produk.length, 'total products');
+                // Still show all products, just mark them
+                DB.produk.forEach(p => p.is_active = true);
+            }
+            
         } catch(apiError) {
-            console.warn('API gagal, menggunakan data dummy:', apiError);
-            showToast('⚠️ Menggunakan data offline (demo mode)', true);
-            res = getDummyData();
+            console.error('❌ API failed, using dummy data:', apiError);
+            showToast('⚠️ Gagal konek server, menggunakan data offline', true);
+            const dummy = getDummyData();
+            DB = dummy;
         }
         
-        if (res.status === 'ok' && res.data) {
-            DB = res.data;
-        } else if (res.status === 'ok' && res.produk) {
-            DB.produk = res.produk || [];
-            DB.settings = { nama_depot: 'EMBUN LAWU' };
+        // Ensure DB has all required properties
+        if (!DB.petugas || DB.petugas.length === 0) {
             DB.petugas = [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
-        } else {
-            throw new Error('Data format invalid');
         }
+        if (!DB.settings) {
+            DB.settings = { nama_depot: 'EMBUN LAWU' };
+        }
+        if (!DB.transaksi) DB.transaksi = [];
+        if (!DB.pelanggan) DB.pelanggan = [];
         
-        if (!DB.produk) DB.produk = [];
-        
-        const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
-        
-        console.log(`✅ Loaded: ${aktifProduk.length} produk aktif`);
-        
+        // Update UI
         const select = document.getElementById('selectPetugas');
         if (select) {
             select.innerHTML = '<option value="">-- Pilih Petugas --</option>';
-            if (DB.petugas && DB.petugas.length) {
-                DB.petugas.forEach(p => {
-                    select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`;
-                });
-            } else {
-                select.innerHTML += '<option value="P001">👤 KHOLID</option>';
-                DB.petugas = [{ id: 'P001', nama: 'KHOLID' }];
-            }
+            DB.petugas.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">👤 ${p.nama}</option>`;
+            });
         }
         
+        // Update depot name
+        if (DB.settings && DB.settings.nama_depot) {
+            document.getElementById('namaDepot').innerText = DB.settings.nama_depot;
+        }
+        
+        // Render all components
         renderProdukGrid();
         renderDashboard();
         renderPelanggan();
         renderHutang();
         renderLaporan();
         
-        if (DB.settings && DB.settings.nama_depot) {
-            document.getElementById('namaDepot').innerText = DB.settings.nama_depot;
-        }
-        
-        if (aktifProduk.length === 0) {
-            showToast('⚠️ Tidak ada produk aktif! Gunakan data demo.', true);
+        const aktifCount = DB.produk.filter(p => p.is_active === true).length;
+        if (aktifCount === 0) {
+            showToast('⚠️ Tidak ada produk aktif! Periksa data di Google Sheet.', true);
         } else {
-            showToast(`✅ ${aktifProduk.length} produk siap digunakan`);
+            showToast(`✅ ${aktifCount} produk siap digunakan`);
         }
         
     } catch(error) {
-        console.error('Load Data Error:', error);
+        console.error('❌ Load Data Error:', error);
         showToast(`❌ Gagal load data: ${error.message}`, true);
         
+        // Fallback to dummy data
         const dummy = getDummyData();
-        DB = dummy.data;
+        DB = dummy;
         renderProdukGrid();
+        renderDashboard();
+        renderPelanggan();
+        renderHutang();
+        renderLaporan();
     } finally {
         isLoading = false;
     }
@@ -984,8 +1038,10 @@ function renderProdukGrid() {
     if (!grid) return;
     
     const aktifProduk = DB.produk.filter(p => p.is_active === true);
+    console.log('🎨 Rendering produk, count:', aktifProduk.length);
     
     if (aktifProduk.length === 0) {
+        // Show default products if none available
         const defaultProducts = [
             { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
             { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
@@ -1151,7 +1207,7 @@ async function prosesTransaksi() {
     showToast('💾 Menyimpan transaksi...');
     
     try {
-        const res = await callAPI('saveTransaction', { action: 'saveTransaction', transaction: trx });
+        const res = await callAPI('saveTransaction', { transaction: trx });
         
         if (res.status === 'ok') {
             showToast('✅ Transaksi berhasil disimpan!');
@@ -1159,10 +1215,9 @@ async function prosesTransaksi() {
             cart = {}; ongkir = 0;
             document.getElementById('ongkir-input').value = 0;
             renderProdukGrid();
-            document.getElementById('kasir-nama').value = '';
-            document.getElementById('kasir-wa').value = '';
-            loadAllData();
+            await loadAllData(); // Refresh data
         } else {
+            // Save offline
             let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
             offlineTrx.push(trx);
             localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
@@ -1172,6 +1227,7 @@ async function prosesTransaksi() {
             renderProdukGrid();
         }
     } catch(e) {
+        console.error('Save error:', e);
         let offlineTrx = JSON.parse(localStorage.getItem('offline_transactions') || '[]');
         offlineTrx.push(trx);
         localStorage.setItem('offline_transactions', JSON.stringify(offlineTrx));
@@ -1279,7 +1335,7 @@ function renderLaporan() {
     
     let html = '<table class="data-table"><thead><tr>';
     html += '<th>Tanggal</th><th>Pelanggan</th><th>Subtotal</th><th>Ongkir</th><th>Total</th><th>Bayar</th><th>Status</th>';
-    html += '</tr></thead><tbody>';
+    html += '</table></thead><tbody>';
     
     DB.transaksi.slice().reverse().forEach(t => {
         html += `<tr>
@@ -1302,6 +1358,11 @@ let bluetoothCharacteristic = null;
 
 async function connectBluetoothPrinter() {
     try {
+        if (!('bluetooth' in navigator)) {
+            showToast('❌ Browser tidak support Bluetooth. Gunakan Chrome Android.', true);
+            return;
+        }
+        
         showToast('🔍 Mencari printer Bluetooth...');
         const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: false,
@@ -1466,26 +1527,22 @@ function checkBluetoothSupport() {
     }
 }
 
-// ========== PIN LOGIN SYSTEM (VERSI SEDERHANA) ==========
+// ========== PIN LOGIN SYSTEM ==========
 let pendingPIN = '';
 
-// Cek apakah PIN sudah dibuat
 function isPINSet() {
     const pin = localStorage.getItem('depotpintar_pin');
     return pin && pin.length >= 4;
 }
 
-// Simpan PIN
 function savePIN(pin) {
     localStorage.setItem('depotpintar_pin', pin);
 }
 
-// Ambil PIN yang tersimpan
 function getPIN() {
     return localStorage.getItem('depotpintar_pin');
 }
 
-// Halaman PIN
 function showPINPage() {
     document.getElementById('pinPage').style.display = 'flex';
     document.getElementById('mainApp').style.display = 'none';
@@ -1493,7 +1550,6 @@ function showPINPage() {
     pendingPIN = '';
 }
 
-// Halaman utama
 function showMainApp() {
     document.getElementById('pinPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
@@ -1501,7 +1557,6 @@ function showMainApp() {
     checkBluetoothSupport();
 }
 
-// Tombol angka PIN
 function pinInput(num) {
     if (pendingPIN.length >= 6) return;
     pendingPIN += num;
@@ -1513,13 +1568,10 @@ function pinDelete() {
     document.getElementById('pinInput').value = '*'.repeat(pendingPIN.length);
 }
 
-// Proses login
 function pinLogin() {
-    console.log('pinLogin called, pendingPIN:', JSON.stringify(pendingPIN), 'type:', typeof pendingPIN);
+    console.log('pinLogin called, pendingPIN:', pendingPIN);
     
-    // Jika belum ada PIN
     if (!isPINSet()) {
-        // Tidak ada PIN, buat PIN baru
         if (pendingPIN.length < 4) {
             alert('PIN minimal 4 digit!');
             return;
@@ -1531,26 +1583,19 @@ function pinLogin() {
         return;
     }
     
-    // Jika sudah ada PIN, cek kecocokan
     const savedPIN = getPIN();
-    console.log('Saved PIN:', JSON.stringify(savedPIN), 'type:', typeof savedPIN);
-    console.log('Pending PIN:', JSON.stringify(pendingPIN), 'type:', typeof pendingPIN);
+    console.log('Saved PIN:', savedPIN);
     console.log('Comparison:', pendingPIN === savedPIN);
     
-    // Bersihkan whitespace dan bandingkan
-    const pendingTrimmed = pendingPIN.trim();
-    const savedTrimmed = savedPIN.trim();
-    
-    if (pendingTrimmed === savedTrimmed) {
+    if (pendingPIN === savedPIN) {
         showMainApp();
     } else {
-        alert('❌ PIN salah! Coba lagi.\n\nPIN yang diketik: "' + pendingPIN + '"\nPIN tersimpan: "' + savedPIN + '"');
+        alert('❌ PIN salah! Coba lagi.');
         pendingPIN = '';
         document.getElementById('pinInput').value = '';
     }
 }
 
-// Setup PIN baru (dari menu pengaturan)
 function setupNewPIN() {
     const currentPIN = getPIN();
     if (currentPIN) {
@@ -1576,23 +1621,19 @@ function setupNewPIN() {
     alert('PIN berhasil diganti!');
 }
 
-// Ganti PIN (dari menu pengaturan)
 function gantiPIN() {
     setupNewPIN();
 }
 
-// Cek saat halaman dimuat
 function checkPINOnLoad() {
     const savedPIN = localStorage.getItem('depotpintar_pin');
     
     if (savedPIN && savedPIN.length >= 4) {
-        // PIN sudah ada, tampilkan halaman login PIN
         document.getElementById('pinPage').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('pinInput').value = '';
         pendingPIN = '';
     } else {
-        // Belum ada PIN, tampilkan halaman PIN untuk buat PIN baru
         document.getElementById('pinPage').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('pinInput').value = '';
@@ -1615,6 +1656,8 @@ function showPage(page) {
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM Loaded, initializing...');
+    console.log('API URL:', API_URL);
     checkPINOnLoad();
     
     document.addEventListener('click', (e) => {
