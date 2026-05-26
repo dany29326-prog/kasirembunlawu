@@ -461,9 +461,7 @@ index.html
     </style>
 </head>
 <body>
-
 <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
-
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
         <h1>💧 AquaPos</h1>
@@ -487,7 +485,6 @@ index.html
         </div>
     </nav>
 </aside>
-
 <main class="main">
     <!-- Dashboard Page -->
     <div id="page-dashboard" class="page active">
@@ -515,7 +512,6 @@ index.html
             <div id="dash-trx-list">Loading...</div>
         </div>
     </div>
-
     <!-- Kasir Page dengan Ongkir -->
     <div id="page-kasir" class="page">
         <div class="card">
@@ -570,7 +566,6 @@ index.html
         <button class="btn-bayar" onclick="prosesTransaksi()">✅ BAYAR SEKARANG</button>
         <button class="btn-secondary" onclick="resetKasir()">🔄 Reset Kasir</button>
     </div>
-
     <!-- Pelanggan Page -->
     <div id="page-pelanggan" class="page">
         <div class="card">
@@ -578,7 +573,6 @@ index.html
             <div id="pel-list">Loading...</div>
         </div>
     </div>
-
     <!-- Hutang Page -->
     <div id="page-hutang" class="page">
         <div class="card">
@@ -586,7 +580,6 @@ index.html
             <div id="hutang-list">Loading...</div>
         </div>
     </div>
-
     <!-- Laporan Page -->
     <div id="page-laporan" class="page">
         <div class="card">
@@ -597,82 +590,13 @@ index.html
         </div>
     </div>
 </main>
-
 <div id="toast" class="toast"></div>
-
 <script>
 // ========== KONFIGURASI ==========
 // !!! GANTI DENGAN URL APPS SCRIPT ANDA YANG SUDAH DI-DEPLOY !!!
 const API_URL = 'https://script.google.com/macros/s/AKfycbyH3Mc4K1NVDx9CHVLyDdxPKY2SHirjjVPI_mtOnBDohTXYB3XxC_AMWG6VDK3go7EFqg/exec';
-<<<<<<< HEAD
 
-// ========== GLOBAL VARIABLES ==========
-let DB = { 
-    produk: [], 
-    pelanggan: [], 
-    transaksi: [], 
-    petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
-    settings: { nama_depot: 'EMBUN LAWU' }
-};
-let cart = {};
-let payMethod = 'tunai';
-let currentPetugas = null;
-let isLoading = false;
-let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
-
-// ========== HELPER FUNCTIONS ==========
-function formatRupiah(angka) {
-    if (!angka && angka !== 0) return 'Rp0';
-    return 'Rp' + angka.toLocaleString('id-ID');
-}
-
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = 'toast show';
-    if (isError) toast.classList.add('error');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function toggleSidebar(show) {
-    const sidebar = document.getElementById('sidebar');
-    if (show === undefined) {
-        sidebar.classList.toggle('show');
-    } else if (!show) {
-        sidebar.classList.remove('show');
-    }
-}
-
-=======
-
-// ========== GLOBAL VARIABLES ==========
-let DB = { 
-    produk: [], 
-    pelanggan: [], 
-    transaksi: [], 
-    petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
-    settings: { nama_depot: 'EMBUN LAWU' }
-};
-let cart = {};
-let payMethod = 'tunai';
-let currentPetugas = null;
-let isLoading = false;
-let ongkir = 0; // Variabel untuk menyimpan biaya ongkir
-
-// ========== HELPER FUNCTIONS ==========
-function formatRupiah(angka) {
-    if (!angka && angka !== 0) return 'Rp0';
-    return 'Rp' + angka.toLocaleString('id-ID');
-}
-
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = 'toast show';
-    if (isError) toast.classList.add('error');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
+// ========== DATA PRODUK DUMMY (TERPUSAT) ==========
 function getDefaultProducts() {
     return [
         { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
@@ -683,11 +607,43 @@ function getDefaultProducts() {
     ];
 }
 
+// Cari produk dari DB atau dari dummy
 function findProductById(id) {
-    let p = DB.produk.find(p => p.id === id);
-    if (p) return p;
-    const defaultProducts = getDefaultProducts();
-    return defaultProducts.find(p => p.id === id);
+    // Cari dari database dulu
+    let product = DB.produk.find(p => p.id === id);
+    if (product) return product;
+    
+    // Jika tidak ada, cari dari dummy
+    const dummyProducts = getDefaultProducts();
+    return dummyProducts.find(p => p.id === id);
+}
+
+// ========== GLOBAL VARIABLES ==========
+let DB = { 
+    produk: [], 
+    pelanggan: [], 
+    transaksi: [], 
+    petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }],
+    settings: { nama_depot: 'EMBUN LAWU' }
+};
+let cart = {};
+let payMethod = 'tunai';
+let currentPetugas = null;
+let isLoading = false;
+let ongkir = 0;
+
+// ========== HELPER FUNCTIONS ==========
+function formatRupiah(angka) {
+    if (!angka && angka !== 0) return 'Rp0';
+    return 'Rp' + angka.toLocaleString('id-ID');
+}
+
+function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show';
+    if (isError) toast.classList.add('error');
+    setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function toggleSidebar(show) {
@@ -698,22 +654,18 @@ function toggleSidebar(show) {
         sidebar.classList.remove('show');
     }
 }
-
->>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
 // ========== FUNGSI ONGKIR ==========
 function updateOngkir() {
     const input = document.getElementById('ongkir-input');
     ongkir = parseInt(input.value) || 0;
     updateSummary();
 }
-
 function setOngkirDefault() {
     ongkir = 5000;
     document.getElementById('ongkir-input').value = 5000;
     updateSummary();
     showToast('🚚 Ongkir diatur Rp5.000');
 }
-
 // ========== API CALL ==========
 async function callAPI(action, data = {}) {
     if (action === 'getAllData') {
@@ -761,7 +713,6 @@ async function callAPI(action, data = {}) {
         }
     }
 }
-
 // ========== DATA DUMMY ==========
 function getDummyData() {
     return {
@@ -781,7 +732,6 @@ function getDummyData() {
         }
     };
 }
-
 // ========== LOAD DATA ==========
 async function loadAllData() {
     if (isLoading) return;
@@ -877,7 +827,6 @@ async function loadAllData() {
         isLoading = false;
     }
 }
-
 // ========== RENDER PRODUK ==========
 function renderProdukGrid() {
     const grid = document.getElementById('produk-grid');
@@ -886,17 +835,7 @@ function renderProdukGrid() {
     const aktifProduk = DB.produk.filter(p => p.is_active === true);
     
     if (aktifProduk.length === 0) {
-<<<<<<< HEAD
-        const defaultProducts = [
-            { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000, is_active: true },
-            { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000, is_active: true },
-            { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
-            { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
-            { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-        ];
-=======
         const defaultProducts = getDefaultProducts();
->>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         let html = '';
         defaultProducts.forEach(p => {
@@ -937,7 +876,6 @@ function renderProdukGrid() {
     grid.innerHTML = html;
     updateSummary();
 }
-
 function changeCart(id, delta) {
     const qty = (cart[id] || 0) + delta;
     if (qty <= 0) {
@@ -947,27 +885,12 @@ function changeCart(id, delta) {
     }
     renderProdukGrid();
 }
-
 function updateSummary() {
     let subtotal = 0;
     let html = '';
     
     for (let id in cart) {
-<<<<<<< HEAD
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { nama: 'Galon Biasa', icon: '💧', harga: 6000 },
-                'd2': { nama: 'Galon RO', icon: '💧✨', harga: 10000 },
-                'd3': { nama: 'Ultra Gelas', icon: '🥤', harga: 24000 },
-                'd4': { nama: 'Ultra 330ml', icon: '🧃', harga: 1700 },
-                'd5': { nama: 'Ultra 600ml', icon: '🧃', harga: 2000 }
-            };
-            p = defaultProducts[id];
-        }
-=======
         let p = findProductById(id);
->>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         if (p) {
             const subtotalItem = p.harga * cart[id];
@@ -1005,7 +928,6 @@ function updateSummary() {
     
     return { subtotal, grandTotal };
 }
-
 // ========== KASIR FUNCTIONS ==========
 function selectPay(method) {
     payMethod = method;
@@ -1018,7 +940,6 @@ function selectPay(method) {
         document.querySelectorAll('.pay-btn')[2].classList.add('selected');
     }
 }
-
 function setPetugas() {
     const id = document.getElementById('selectPetugas').value;
     currentPetugas = DB.petugas?.find(p => p.id === id);
@@ -1030,7 +951,6 @@ function setPetugas() {
         statusSpan.innerText = currentPetugas ? `✅ ${currentPetugas.nama}` : '';
     }
 }
-
 async function prosesTransaksi() {
     if (!currentPetugas) {
         showToast('❌ Pilih petugas terlebih dahulu!', true);
@@ -1039,21 +959,7 @@ async function prosesTransaksi() {
     
     const items = [];
     for (let id in cart) {
-<<<<<<< HEAD
-        let p = DB.produk.find(p => p.id === id);
-        if (!p) {
-            const defaultProducts = {
-                'd1': { id: 'd1', nama: 'Galon Biasa', icon: '💧', satuan: 'galon', harga: 6000 },
-                'd2': { id: 'd2', nama: 'Galon RO', icon: '💧✨', satuan: 'galon', harga: 10000 },
-                'd3': { id: 'd3', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000 },
-                'd4': { id: 'd4', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700 },
-                'd5': { id: 'd5', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000 }
-            };
-            p = defaultProducts[id];
-        }
-=======
         let p = findProductById(id);
->>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
         
         if (p && cart[id] > 0) {
             items.push({
@@ -1145,10 +1051,7 @@ async function prosesTransaksi() {
         renderProdukGrid();
     }
 }
-
 function resetKasir() {
-<<<<<<< HEAD
-=======
     const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
     
     if (totalItems > 0 || ongkir > 0) {
@@ -1156,7 +1059,6 @@ function resetKasir() {
         if (!confirmed) return;
     }
     
->>>>>>> 891e49d (Add getDefaultProducts/findProductById, fix hutang validation, add resetKasir confirmation, remove hardcoded product data)
     cart = {};
     ongkir = 0;
     document.getElementById('ongkir-input').value = 0;
@@ -1165,7 +1067,6 @@ function resetKasir() {
     document.getElementById('kasir-wa').value = '';
     showToast('🔄 Kasir direset');
 }
-
 // ========== RENDER DASHBOARD ==========
 function renderDashboard() {
     const today = new Date();
@@ -1231,7 +1132,6 @@ function renderDashboard() {
     
     console.log('Dashboard - Omset:', omset, 'Galon:', galon, 'Transaksi:', todayTrx.length);
 }
-
 function renderPelanggan() {
     let html = '';
     if (!DB.pelanggan || DB.pelanggan.length === 0) {
@@ -1249,7 +1149,6 @@ function renderPelanggan() {
     const pelListEl = document.getElementById('pel-list');
     if (pelListEl) pelListEl.innerHTML = html;
 }
-
 function renderHutang() {
     const hutangTrx = (DB.transaksi || []).filter(t => t.status === 'hutang' && !t.hutangLunas);
     const byName = {};
@@ -1272,7 +1171,6 @@ function renderHutang() {
     const hutangListEl = document.getElementById('hutang-list');
     if (hutangListEl) hutangListEl.innerHTML = html;
 }
-
 function renderLaporan() {
     if (!DB.transaksi || DB.transaksi.length === 0) {
         const lapEl = document.getElementById('lap-tbody');
@@ -1300,7 +1198,6 @@ function renderLaporan() {
     const lapEl = document.getElementById('lap-tbody');
     if (lapEl) lapEl.innerHTML = html;
 }
-
 // ========== PAGE NAVIGATION ==========
 function showPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1317,7 +1214,6 @@ function showPage(page) {
     if (page === 'hutang') renderHutang();
     if (page === 'laporan') renderLaporan();
 }
-
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
