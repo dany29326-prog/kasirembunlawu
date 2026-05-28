@@ -621,14 +621,14 @@ function getPetugasDariSheet() {
     
     const rows = sheet.getDataRange().getValues();
     const headers = rows[0];
-    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    const is6Cols = headers && headers.length >= 4 && headers[2] && headers[2].toString().toLowerCase().trim() === 'is_active';
     
     const petugas = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row[0] && row[0].toString().trim() !== '') {
         const jab = is6Cols ? (row[3] || 'Kasir') : (row[2] || 'Kasir');
-        const isActive = is6Cols ? (row[2] === true || row[2] === 'TRUE' || row[2] === 'True') : true;
+        const isActive = is6Cols ? (row[2] === true || row[2] === 'TRUE' || row[2] === 'True' || row[2].toString().toLowerCase().trim() === 'true') : true;
         
         if (isActive) {
           petugas.push({
@@ -658,7 +658,7 @@ function savePetugas(p) {
     
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
-    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    const is6Cols = headers && headers.length >= 4 && headers[2] && headers[2].toString().toLowerCase().trim() === 'is_active';
     
     let foundIndex = -1;
     for (let i = 1; i < data.length; i++) {
@@ -710,7 +710,7 @@ function deletePetugas(id) {
     
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
-    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    const is6Cols = headers && headers.length >= 4 && headers[2] && headers[2].toString().toLowerCase().trim() === 'is_active';
     
     for (let i = 1; i < data.length; i++) {
       if (data[i][0].toString() === id.toString()) {
