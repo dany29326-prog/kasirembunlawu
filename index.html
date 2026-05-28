@@ -602,6 +602,25 @@ function formatRupiah(angka) {
     return 'Rp' + angka.toLocaleString('id-ID');
 }
 
+function getLocalDateString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getLocalDatetimeString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -764,7 +783,7 @@ async function prosesTransaksi() {
     if (payMethod === 'hutang') {
         if (!nama || nama === 'Umum' || nama.length < 3) { showToast('❌ Hutang wajib pakai nama valid!', true); isProcessing = false; if(btnBayar){btnBayar.disabled=false;btnBayar.style.opacity='1';btnBayar.innerText='✅ BAYAR SEKARANG';} return; }
     }
-    const trx = { id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2,4), tanggal: new Date().toISOString().slice(0,10), waktu: new Date().toISOString(), petugas_id: currentPetugas.id, petugas_nama: currentPetugas.nama, nama, wa, items, ongkir, subtotal, total, bayar: payMethod, status: payMethod === 'hutang' ? 'hutang' : 'lunas', catatan: '', hutangLunas: false, totalGalon };
+    const trx = { id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2,4), tanggal: getLocalDateString(), waktu: getLocalDatetimeString(), petugas_id: currentPetugas.id, petugas_nama: currentPetugas.nama, nama, wa, items, ongkir, subtotal, total, bayar: payMethod, status: payMethod === 'hutang' ? 'hutang' : 'lunas', catatan: '', hutangLunas: false, totalGalon };
     showToast('💾 Menyimpan transaksi...');
     try {
         const res = await callAPI('saveTransaction', { action: 'saveTransaction', transaction: trx });
