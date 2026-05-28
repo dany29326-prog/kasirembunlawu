@@ -620,15 +620,23 @@ function getPetugasDariSheet() {
     }
     
     const rows = sheet.getDataRange().getValues();
+    const headers = rows[0];
+    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    
     const petugas = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row[0] && row[0].toString().trim() !== '') {
-        petugas.push({
-          id: row[0].toString(),
-          nama: row[1] || 'Staff',
-          jabatan: row[2] || 'Kasir'
-        });
+        const jab = is6Cols ? (row[3] || 'Kasir') : (row[2] || 'Kasir');
+        const isActive = is6Cols ? (row[2] === true || row[2] === 'TRUE' || row[2] === 'True') : true;
+        
+        if (isActive) {
+          petugas.push({
+            id: row[0].toString(),
+            nama: row[1] || 'Staff',
+            jabatan: jab.toString()
+          });
+        }
       }
     }
     return petugas.length > 0 ? petugas : [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }];
@@ -644,11 +652,14 @@ function savePetugas(p) {
     let sheet = ss.getSheetByName('petugas');
     if (!sheet) {
       sheet = ss.insertSheet('petugas');
-      sheet.appendRow(['id', 'nama', 'jabatan']);
-      sheet.appendRow(['P001', 'KHOLID', 'Owner']);
+      sheet.appendRow(['id', 'nama', 'is_active', 'jabatan', 'created_at', 'last_login']);
+      sheet.appendRow(['P001', 'KHOLID', 'TRUE', 'Owner', new Date().toISOString().split('T')[0], '']);
     }
     
     const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    
     let foundIndex = -1;
     for (let i = 1; i < data.length; i++) {
       if (data[i][0].toString() === p.id.toString()) {
@@ -657,11 +668,29 @@ function savePetugas(p) {
       }
     }
     
-    const rowData = [p.id, p.nama, p.jabatan || 'Kasir'];
-    if (foundIndex !== -1) {
-      sheet.getRange(foundIndex + 1, 1, 1, 3).setValues([rowData]);
+    let rowData;
+    if (is6Cols) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      rowData = [
+        p.id,
+        p.nama,
+        true,
+        p.jabatan || 'Kasir',
+        foundIndex !== -1 ? (data[foundIndex][4] || todayStr) : todayStr,
+        foundIndex !== -1 ? (data[foundIndex][5] || '') : ''
+      ];
+      if (foundIndex !== -1) {
+        sheet.getRange(foundIndex + 1, 1, 1, 6).setValues([rowData]);
+      } else {
+        sheet.appendRow(rowData);
+      }
     } else {
-      sheet.appendRow(rowData);
+      rowData = [p.id, p.nama, p.jabatan || 'Kasir'];
+      if (foundIndex !== -1) {
+        sheet.getRange(foundIndex + 1, 1, 1, 3).setValues([rowData]);
+      } else {
+        sheet.appendRow(rowData);
+      }
     }
     
     logActivity('SAVE_PETUGAS', p.id, 'Nama: ' + p.nama + ', Jabatan: ' + p.jabatan);
@@ -680,11 +709,20 @@ function deletePetugas(id) {
     if (!sheet) return { status: 'error', message: 'Sheet petugas tidak ditemukan' };
     
     const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const is6Cols = headers.length >= 4 && headers[2] === 'is_active';
+    
     for (let i = 1; i < data.length; i++) {
       if (data[i][0].toString() === id.toString()) {
-        sheet.deleteRow(i + 1);
-        logActivity('DELETE_PETUGAS', id, 'Berhasil menghapus petugas');
-        return { status: 'ok', message: 'Petugas berhasil dihapus' };
+        if (is6Cols) {
+          sheet.getRange(i + 1, 3).setValue(false);
+          logActivity('DELETE_PETUGAS_SOFT', id, 'Berhasil menonaktifkan petugas');
+          return { status: 'ok', message: 'Petugas berhasil dinonaktifkan' };
+        } else {
+          sheet.deleteRow(i + 1);
+          logActivity('DELETE_PETUGAS_HARD', id, 'Berhasil menghapus petugas');
+          return { status: 'ok', message: 'Petugas berhasil dihapus' };
+        }
       }
     }
     return { status: 'error', message: 'Petugas tidak ditemukan' };
