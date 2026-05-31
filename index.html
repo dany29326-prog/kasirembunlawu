@@ -923,7 +923,7 @@ async function prosesTransaksi() {
     const items = [];
     for (let id in cart) {
         let p = findProductById(id);
-        if (p && cart[id] > 0) items.push({ id: p.id, nama: p.nama, icon: p.icon, satuan: p.satuan || 'galon', harga: p.harga, qty: cart[id], subtotal: p.harga * cart[id] });
+        if (p && cart[id] > 0) items.push({ id: p.id, nama: p.nama, icon: p.icon, satuan: p.satuan || 'galon', harga_beli: Number(p.harga_beli) || 0, harga: p.harga, qty: cart[id], subtotal: p.harga * cart[id] });
     }
     if (items.length === 0) { showToast('❌ Pilih produk dulu!', true); isProcessing = false; if(btnBayar){btnBayar.disabled=false;btnBayar.style.opacity='1';btnBayar.innerText='✅ BAYAR SEKARANG';} return; }
     const subtotal = items.reduce((s,i) => s + i.subtotal, 0);
@@ -1033,9 +1033,29 @@ function renderDashboard() {
     }, 0);
     const hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s,t) => s + (t.total||0), 0);
     
-    // 2. Hitung Pengeluaran & Profit Bersih
+    // 2. Hitung Pengeluaran, Modal (HPP), & Profit Bersih
+    let totalModal = 0;
+    todayTrx.filter(t => t.status === 'lunas').forEach(t => {
+        let items = t.items;
+        if (typeof items === 'string') {
+            try { items = JSON.parse(items); } catch(e) { items = []; }
+        }
+        if (Array.isArray(items)) {
+            items.forEach(i => {
+                let modal = i.harga_beli !== undefined ? Number(i.harga_beli) : undefined;
+                if (modal === undefined || isNaN(modal)) {
+                    // Fallback ambil dari sheet produk jika transaksi lama tidak mencatat harga_beli
+                    const p = DB.produk.find(prod => prod.id === i.id);
+                    modal = p ? Number(p.harga_beli) || 0 : 0;
+                }
+                totalModal += (modal * (i.qty || 0));
+            });
+        }
+    });
+    
     const todayExp = (DB.pengeluaran || []).filter(e => e.tanggal === todayString).reduce((s,e) => s + (Number(e.jumlah)||0), 0);
-    const netProfit = omset - todayExp;
+    // Keuntungan Bersih = Omset Kotor - Total Modal (HPP) - Total Pengeluaran
+    const netProfit = omset - totalModal - todayExp;
     
     // Render ke Elemen UI
     document.getElementById('dash-omset').innerText = formatRupiah(omset);
