@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>DepotPintar - Depot Air Minum EMBUN LAWU</title>
+    <!-- Chart.js CDN untuk Dashboard Visual -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
@@ -26,6 +28,8 @@
         .produk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .produk-card { background: #1c2330; border: 1px solid #30363d; border-radius: 10px; padding: 12px; transition: transform 0.1s; }
         .produk-card:hover { transform: translateY(-2px); border-color: #00e5c0; }
+        .produk-card.out-of-stock { opacity: 0.65; background: #121721; border-color: rgba(240, 92, 92, 0.2); }
+        .produk-card.out-of-stock:hover { transform: none; border-color: rgba(240, 92, 92, 0.2); }
         .produk-icon { font-size: 32px; margin-bottom: 8px; }
         .produk-nama { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
         .produk-harga { color: #00e5c0; font-size: 14px; margin-bottom: 10px; }
@@ -352,6 +356,7 @@
         <div class="nav-item" onclick="showPage('pelanggan'); toggleSidebar(false)">👥 Pelanggan</div>
         <div class="nav-item" onclick="showPage('hutang'); toggleSidebar(false)">📒 Hutang</div>
         <div class="nav-item" onclick="showPage('laporan'); toggleSidebar(false)">📈 Laporan</div>
+        <div class="nav-item" onclick="showPage('pengeluaran'); toggleSidebar(false)">💸 Pengeluaran</div>
         <div class="nav-item" onclick="showPage('pengaturan'); toggleSidebar(false)">⚙️ Pengaturan</div>
     </nav>
     
@@ -365,12 +370,32 @@
 </aside>
 <main class="main">
     <div id="page-dashboard" class="page active">
-        <div class="grid4">
-            <div class="card"><div class="stat-label">Omset Hari Ini</div><div class="stat-value green" id="dash-omset">Rp0</div><div id="dash-omset-sub" style="font-size:12px;color:#7d8590;">0 transaksi</div></div>
-            <div class="card"><div class="stat-label">Galon Terjual</div><div class="stat-value blue" id="dash-galon">0</div></div>
-            <div class="card"><div class="stat-label">Total Hutang</div><div class="stat-value orange" id="dash-hutang">Rp0</div></div>
-            <div class="card"><div class="stat-label">Pelanggan</div><div class="stat-value" id="dash-pelanggan">0</div></div>
+        <!-- Grid Ringkasan Finansial & Operasional -->
+        <div class="grid4" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Omset Hari Ini</div><div class="stat-value green" id="dash-omset">Rp0</div><div id="dash-omset-sub" style="font-size:12px;color:#7d8590;margin-top:4px;">0 transaksi</div></div>
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Pengeluaran Hari Ini</div><div class="stat-value" id="dash-pengeluaran" style="color: #f05c5c; font-weight: bold; font-size: 28px;">Rp0</div></div>
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Keuntungan Bersih Hari Ini</div><div class="stat-value" id="dash-keuntungan-bersih" style="color: #00e5c0; font-weight: bold; font-size: 28px;">Rp0</div></div>
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Galon Terjual Hari Ini</div><div class="stat-value blue" id="dash-galon">0</div></div>
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Total Hutang Aktif</div><div class="stat-value orange" id="dash-hutang">Rp0</div></div>
+            <div class="card" style="margin-bottom:0;"><div class="stat-label">Total Pelanggan</div><div class="stat-value" id="dash-pelanggan">0</div></div>
         </div>
+        
+        <!-- Grafik Penjualan (Chart.js Charts) -->
+        <div class="flex-row" style="margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap;">
+            <div class="card flex-col" style="flex: 1.5; min-width: 320px; margin-bottom: 0; display: flex; flex-direction: column;">
+                <div class="card-title">📈 Tren Pemasukan (Omset) Harian</div>
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="chart-omset"></canvas>
+                </div>
+            </div>
+            <div class="card flex-col" style="flex: 1; min-width: 280px; margin-bottom: 0; display: flex; flex-direction: column;">
+                <div class="card-title">📊 Distribusi Produk Terjual</div>
+                <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                    <canvas id="chart-produk" style="max-height: 240px; max-width: 240px;"></canvas>
+                </div>
+            </div>
+        </div>
+        
         <div class="card"><div class="card-title">📋 Transaksi Terbaru</div><div id="dash-trx-list">Loading...</div></div>
     </div>
     <div id="page-kasir" class="page">
@@ -427,6 +452,57 @@
         </div>
     </div>
 
+    <!-- Halaman Pengeluaran (Expenses Page) -->
+    <div id="page-pengeluaran" class="page">
+        <div class="flex-row">
+            <!-- 1. Form Input Pengeluaran -->
+            <div class="card flex-col" style="flex: 1; min-width: 300px;">
+                <div class="card-title">💸 Catat Kas Pengeluaran</div>
+                
+                <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;margin-top:10px;">Kategori Pengeluaran</label>
+                <select id="exp-kategori" class="table-input" style="height: 42px; margin-bottom: 12px; background: #0d1117;">
+                    <option value="Operasional">🛠️ Operasional Depot</option>
+                    <option value="Belanja Alat / Restock">🛒 Belanja Barang / Tutup / Tisu</option>
+                    <option value="Gaji / Komisi">💵 Gaji / Komisi Staff</option>
+                    <option value="Listrik / Air">⚡ Listrik & Air</option>
+                    <option value="Lain-lain">📦 Pengeluaran Lain-lain</option>
+                </select>
+                
+                <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Jumlah (Rp)</label>
+                <input type="number" id="exp-jumlah" placeholder="Contoh: 50000" style="padding: 10px; margin-bottom: 12px;">
+                
+                <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Keterangan / Detail</label>
+                <textarea id="exp-keterangan" placeholder="Contoh: Beli tutup galon 1 karung" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 8px; font-size: 13px; min-height: 80px; margin-bottom: 15px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='#00e5c0'" onblur="this.style.borderColor='#30363d'"></textarea>
+                
+                <button onclick="simpanPengeluaranBaru()" style="width:100%;padding:12px;background:#00e5c0;color:#0d1117;border:none;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;">💾 Simpan Pengeluaran</button>
+            </div>
+            
+            <!-- 2. Riwayat Pengeluaran -->
+            <div class="card flex-col" style="flex: 2; min-width: 320px;">
+                <div class="btn-action-row">
+                    <div class="card-title" style="margin-bottom:0;">📋 Riwayat Pengeluaran Kas</div>
+                    <div id="exp-total-badge" style="background: rgba(240,92,92,0.15); color: #f05c5c; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">Total: Rp0</div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kategori</th>
+                                <th>Jumlah</th>
+                                <th>Keterangan</th>
+                                <th style="text-align:right;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exp-tbody">
+                            <!-- Dinamis via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Halaman Pengaturan (Settings Page) -->
     <div id="page-pengaturan" class="page">
         <!-- 1. Pengaturan Depot -->
@@ -438,6 +514,21 @@
                     <input type="text" id="set-nama-depot" placeholder="Masukkan nama depot" style="margin-bottom:0;">
                 </div>
                 <button onclick="simpanNamaDepot()" style="padding:10px 20px;background:#00e5c0;color:#0d1117;border:none;border-radius:8px;font-weight:bold;">💾 Simpan</button>
+            </div>
+        </div>
+        
+        <!-- 4. Pengaturan Bluetooth Printer -->
+        <div class="card" style="margin-top: 15px; margin-bottom: 20px;">
+            <div class="card-title">🖨️ Pengaturan Printer Bluetooth</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <div style="font-size: 13px; color: #e6edf3; font-weight: bold;">Printer Direct (ESC/POS 58mm)</div>
+                    <div id="bt-printer-status" style="font-size: 12px; color: #7d8590; margin-top: 3px;">Status: Belum Terhubung</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-connect-bt" onclick="hubungkanPrinterBluetooth()" style="padding: 10px 16px; background: #1f6feb; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer;">🔌 Hubungkan Printer</button>
+                    <button id="btn-disconnect-bt" onclick="putuskanPrinterBluetooth()" style="padding: 10px 12px; background: #1c2330; border: 1px solid #30363d; color: #7d8590; border-radius: 8px; font-size: 13px; display: none; cursor: pointer;">Putus</button>
+                </div>
             </div>
         </div>
         
@@ -679,7 +770,7 @@ function getDummyData() {
         { id: 'P003', nama: 'Ultra Gelas', icon: '🥤', satuan: 'dus', harga: 24000, is_active: true },
         { id: 'P004', nama: 'Ultra 330ml', icon: '🧃', satuan: 'pcs', harga: 1700, is_active: true },
         { id: 'P005', nama: 'Ultra 600ml', icon: '🧃', satuan: 'pcs', harga: 2000, is_active: true }
-    ], pelanggan: [], transaksi: [], petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }], settings: { nama_depot: 'EMBUN LAWU' } } };
+    ], pelanggan: [], transaksi: [], petugas: [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }], settings: { nama_depot: 'EMBUN LAWU' }, pengeluaran: [] } };
 }
 
 async function loadAllData() {
@@ -691,9 +782,10 @@ async function loadAllData() {
         try { res = await callAPI('getAllData'); console.log('API Response:', res); }
         catch(apiError) { console.warn('API gagal:', apiError); showToast('⚠️ Menggunakan data offline', true); res = getDummyData(); }
         if (res.status === 'ok' && res.data) { DB = res.data; }
-        else if (res.status === 'ok' && res.produk) { DB.produk = res.produk || []; DB.settings = res.settings || { nama_depot: 'EMBUN LAWU' }; DB.petugas = res.petugas || [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]; }
+        else if (res.status === 'ok' && res.produk) { DB.produk = res.produk || []; DB.settings = res.settings || { nama_depot: 'EMBUN LAWU' }; DB.petugas = res.petugas || [{ id: 'P001', nama: 'KHOLID', jabatan: 'Owner' }]; DB.pengeluaran = []; }
         else { throw new Error('Data format invalid'); }
         if (!DB.produk || DB.produk.length === 0) DB.produk = getDefaultProducts();
+        if (!DB.pengeluaran) DB.pengeluaran = [];
         const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
         const select = document.getElementById('selectPetugas');
         if (select) {
@@ -718,15 +810,74 @@ function renderProdukGrid() {
     const aktifProduk = DB.produk.filter(p => p.is_active === true || p.is_active === 'TRUE' || p.is_active === 'True');
     let html = '';
     const products = aktifProduk.length > 0 ? aktifProduk : getDefaultProducts();
+    
     products.forEach(p => {
         const qty = cart[p.id] || 0;
-        html += `<div class="produk-card"><div class="produk-icon">${p.icon||'💧'}</div><div class="produk-nama">${p.nama}</div><div class="produk-harga">${formatRupiah(p.harga)} / ${p.satuan||'galon'}</div><div class="qty-row"><button class="q-btn" onclick="changeCart('${p.id}',-1)">-</button><div class="q-num">${qty}</div><button class="q-btn" onclick="changeCart('${p.id}',1)">+</button></div></div>`;
+        const totalStok = Number(p.stok) || 0;
+        const isRefill = p.satuan && p.satuan.toLowerCase() === 'galon';
+        
+        let stokHtml = '';
+        let isOutOfStock = false;
+        let isLowStock = false;
+        
+        if (isRefill) {
+            stokHtml = `<div style="font-size:11px; color:#3dd68c; margin-top:4px; font-weight:bold;">📦 Stok: Unlimited</div>`;
+        } else if (totalStok > 0) {
+            const sisaStok = totalStok - qty;
+            if (sisaStok <= 0) {
+                isOutOfStock = true;
+                stokHtml = `<div style="font-size:11px; color:#f05c5c; margin-top:4px; font-weight:bold;">❌ Stok Habis</div>`;
+            } else if (sisaStok < 5) {
+                isLowStock = true;
+                stokHtml = `<div style="font-size:11px; color:#f0a050; margin-top:4px; font-weight:bold;">⚠️ Stok Tipis: ${sisaStok}</div>`;
+            } else {
+                stokHtml = `<div style="font-size:11px; color:#7d8590; margin-top:4px;">📦 Stok: ${sisaStok}</div>`;
+            }
+        } else {
+            isOutOfStock = true;
+            stokHtml = `<div style="font-size:11px; color:#f05c5c; margin-top:4px; font-weight:bold;">❌ Stok Habis</div>`;
+        }
+        
+        const cardClass = isOutOfStock ? 'produk-card out-of-stock' : 'produk-card';
+        const addBtnDisabled = isOutOfStock ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : '';
+        
+        html += `
+            <div class="${cardClass}">
+                <div class="produk-icon">${p.icon||'💧'}</div>
+                <div class="produk-nama">${p.nama}</div>
+                <div class="produk-harga">${formatRupiah(p.harga)} / ${p.satuan||'galon'}</div>
+                ${stokHtml}
+                <div class="qty-row" style="margin-top:10px;">
+                    <button class="q-btn" onclick="changeCart('${p.id}',-1)">-</button>
+                    <div class="q-num">${qty}</div>
+                    <button class="q-btn" onclick="changeCart('${p.id}',1)" ${addBtnDisabled}>+</button>
+                </div>
+            </div>
+        `;
     });
     grid.innerHTML = html;
     updateSummary();
 }
 
 function changeCart(id, delta) {
+    let p = findProductById(id);
+    if (p) {
+        const totalStok = Number(p.stok) || 0;
+        const isRefill = p.satuan && p.satuan.toLowerCase() === 'galon';
+        const qty = cart[id] || 0;
+        
+        if (delta > 0 && !isRefill) {
+            if (totalStok <= 0) {
+                showToast(`❌ Produk "${p.nama}" habis!`, true);
+                return;
+            }
+            if (qty >= totalStok) {
+                showToast(`⚠️ Stok "${p.nama}" tidak mencukupi!`, true);
+                return;
+            }
+        }
+    }
+    
     const qty = (cart[id] || 0) + delta;
     if (qty <= 0) delete cart[id];
     else cart[id] = qty;
@@ -858,40 +1009,222 @@ function getTanggalTransaksi(t) {
 }
 
 function renderDashboard() {
-    // Menggunakan tanggal lokal sistem pengguna untuk mencegah selisih zona waktu UTC
     const d = new Date();
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const todayString = `${year}-${month}-${day}`;
     
+    // 1. Hitung Ringkasan Data Hari Ini
     const todayTrx = DB.transaksi.filter(t => getTanggalTransaksi(t) === todayString);
     const omset = todayTrx.filter(t => t.status === 'lunas').reduce((s,t) => s + (t.total||0), 0);
     const galon = todayTrx.reduce((s,t) => {
         if (t.totalGalon) return s + t.totalGalon;
-        if (t.items) { const items = typeof t.items === 'string' ? JSON.parse(t.items) : t.items; return s + items.filter(i => i.satuan === 'galon').reduce((sum,i) => sum + i.qty, 0); }
+        if (t.items) {
+            const items = typeof t.items === 'string' ? JSON.parse(t.items) : t.items;
+            return s + items.filter(i => i.satuan === 'galon').reduce((sum,i) => sum + i.qty, 0);
+        }
         return s;
     }, 0);
     const hutang = DB.transaksi.filter(t => t.status === 'hutang' && !t.hutangLunas).reduce((s,t) => s + (t.total||0), 0);
+    
+    // 2. Hitung Pengeluaran & Profit Bersih
+    const todayExp = (DB.pengeluaran || []).filter(e => e.tanggal === todayString).reduce((s,e) => s + (Number(e.jumlah)||0), 0);
+    const netProfit = omset - todayExp;
+    
+    // Render ke Elemen UI
     document.getElementById('dash-omset').innerText = formatRupiah(omset);
     document.getElementById('dash-omset-sub').innerText = todayTrx.length + ' transaksi';
+    document.getElementById('dash-pengeluaran').innerText = formatRupiah(todayExp);
+    document.getElementById('dash-keuntungan-bersih').innerText = formatRupiah(netProfit);
+    
+    // Ganti warna Keuntungan Bersih jika minus/positif
+    const profitEl = document.getElementById('dash-keuntungan-bersih');
+    if (profitEl) {
+        if (netProfit < 0) {
+            profitEl.style.color = '#f05c5c'; // merah jika minus
+        } else {
+            profitEl.style.color = '#00e5c0'; // hijau jika positif
+        }
+    }
+    
     document.getElementById('dash-galon').innerText = galon;
     document.getElementById('dash-hutang').innerText = formatRupiah(hutang);
-    document.getElementById('dash-pelanggan').innerText = DB.pelanggan.length;
+    document.getElementById('dash-pelanggan').innerText = DB.pelanggan ? DB.pelanggan.length : 0;
     
+    // 3. Render Grafik Chart.js
+    renderDashboardCharts(d, todayString);
+    
+    // 4. Render Transaksi Terbaru
     let html = '';
     if (todayTrx.length === 0) {
-        html = '<div style="color:#7d8590;">Belum ada transaksi hari ini</div>';
+        html = '<div style="color:#7d8590; padding:10px 0;">Belum ada transaksi hari ini</div>';
     } else {
         todayTrx.slice(0, 5).forEach(t => {
             html += `<div style="padding:8px 0; border-bottom:1px solid #30363d; display:flex; justify-content:space-between;">
-                        <span>${t.nama}</span>
-                        <span style="color:#00e5c0;">${formatRupiah(t.total)}</span>
+                        <span>👤 ${t.nama} <span style="font-size:11px;color:#7d8590;">(${t.bayar})</span></span>
+                        <span style="color:#00e5c0; font-weight:bold;">${formatRupiah(t.total)}</span>
                     </div>`;
         });
     }
     const trxListEl = document.getElementById('dash-trx-list');
     if (trxListEl) trxListEl.innerHTML = html;
+}
+
+// Fungsi Pembantu Menggambar Grafik Dashboard
+function renderDashboardCharts(d, todayString) {
+    // A. Persiapan Data Grafik Omset 7 Hari Terakhir
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+        const pastDate = new Date();
+        pastDate.setDate(d.getDate() - i);
+        const y = pastDate.getFullYear();
+        const m = String(pastDate.getMonth() + 1).padStart(2, '0');
+        const da = String(pastDate.getDate()).padStart(2, '0');
+        last7Days.push(`${y}-${m}-${da}`);
+    }
+    
+    const dailyTotals = last7Days.map(dateStr => {
+        return DB.transaksi.filter(t => getTanggalTransaksi(t) === dateStr && t.status === 'lunas').reduce((s,t) => s + (t.total||0), 0);
+    });
+    
+    const dailyLabels = last7Days.map(dateStr => {
+        const [y, m, da] = dateStr.split('-');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${da} ${months[parseInt(m)-1]}`;
+    });
+    
+    // B. Persiapan Data Grafik Distribusi Produk Terjual
+    const productSales = {};
+    DB.transaksi.forEach(t => {
+        if (t.items) {
+            const items = typeof t.items === 'string' ? JSON.parse(t.items) : t.items;
+            if (Array.isArray(items)) {
+                items.forEach(item => {
+                    productSales[item.nama] = (productSales[item.nama] || 0) + (item.qty || 0);
+                });
+            }
+        }
+    });
+    
+    const sortedProducts = Object.entries(productSales).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    const productLabels = sortedProducts.map(p => p[0]);
+    const productData = sortedProducts.map(p => p[1]);
+    
+    // C. Render Grafik Omset Harian (Line/Bar)
+    try {
+        const ctxOmset = document.getElementById('chart-omset');
+        if (ctxOmset) {
+            if (window.chartOmsetInstance) { window.chartOmsetInstance.destroy(); }
+            
+            window.chartOmsetInstance = new Chart(ctxOmset, {
+                type: 'line',
+                data: {
+                    labels: dailyLabels,
+                    datasets: [{
+                        label: 'Omset Harian',
+                        data: dailyTotals,
+                        borderColor: '#00e5c0',
+                        backgroundColor: 'rgba(0, 229, 192, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#00e5c0'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + formatRupiah(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#21262d' },
+                            ticks: { color: '#7d8590', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: '#21262d' },
+                            ticks: {
+                                color: '#7d8590',
+                                font: { size: 10 },
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000) + 'k' : value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch(err1) { console.error('Gagal render chart omset:', err1); }
+    
+    // D. Render Grafik Distribusi Produk Terjual (Doughnut)
+    try {
+        const ctxProduk = document.getElementById('chart-produk');
+        if (ctxProduk) {
+            if (window.chartProdukInstance) { window.chartProdukInstance.destroy(); }
+            
+            if (productData.length === 0) {
+                // Tampilkan pesan kosong jika tidak ada data terjual
+                ctxProduk.style.display = 'none';
+                const parent = ctxProduk.parentElement;
+                let noDataEl = document.getElementById('chart-no-data');
+                if (!noDataEl) {
+                    noDataEl = document.createElement('div');
+                    noDataEl.id = 'chart-no-data';
+                    noDataEl.innerText = 'Belum ada produk terjual';
+                    noDataEl.style.color = '#7d8590';
+                    noDataEl.style.fontSize = '12px';
+                    parent.appendChild(noDataEl);
+                }
+            } else {
+                ctxProduk.style.display = 'block';
+                const noDataEl = document.getElementById('chart-no-data');
+                if (noDataEl) noDataEl.remove();
+                
+                window.chartProdukInstance = new Chart(ctxProduk, {
+                    type: 'doughnut',
+                    data: {
+                        labels: productLabels,
+                        datasets: [{
+                            data: productData,
+                            backgroundColor: [
+                                '#00e5c0', // teal
+                                '#1f6feb', // blue
+                                '#f08c3a', // orange
+                                '#f05c5c', // red
+                                '#ab7beb'  // purple
+                            ],
+                            borderWidth: 1,
+                            borderColor: '#161b22'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#7d8590',
+                                    font: { size: 9 },
+                                    boxWidth: 12
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    } catch(err2) { console.error('Gagal render chart produk:', err2); }
 }
 
 function renderPelanggan() {
@@ -1008,7 +1341,11 @@ function tutupModalNota() {
 }
 
 function cetakNota() {
-    window.print();
+    if (printCharacteristic && lastTransactionForReceipt) {
+        cetakStrukBluetoothDirect(lastTransactionForReceipt);
+    } else {
+        window.print();
+    }
 }
 
 function kirimNotaWA() {
@@ -1125,7 +1462,7 @@ function showPage(page) {
         if (navItem) navItem.classList.add('active');
     } else {
         const navItems = document.querySelectorAll('.nav-item');
-        const pageIndexMap = { 'dashboard': 0, 'kasir': 1, 'pelanggan': 2, 'hutang': 3, 'laporan': 4, 'pengaturan': 5 };
+        const pageIndexMap = { 'dashboard': 0, 'kasir': 1, 'pelanggan': 2, 'hutang': 3, 'laporan': 4, 'pengeluaran': 5, 'pengaturan': 6 };
         const idx = pageIndexMap[page];
         if (idx !== undefined && navItems[idx]) {
             navItems[idx].classList.add('active');
@@ -1136,6 +1473,7 @@ function showPage(page) {
     if (page === 'pelanggan') renderPelanggan();
     if (page === 'hutang') renderHutang();
     if (page === 'laporan') renderLaporan();
+    if (page === 'pengeluaran') renderPengeluaran();
     if (page === 'pengaturan') renderSettings();
 }
 
@@ -1210,6 +1548,121 @@ async function sinkronkanTransaksiOffline() {
     } else {
         showToast(`✅ Berhasil menyinkronkan ${successCount} transaksi offline!`);
         loadAllData();
+    }
+}
+
+// ==========================================
+// LOGIKA KAS PENGELUARAN (EXPENSE TRACKER)
+// ==========================================
+
+function renderPengeluaran() {
+    const tbody = document.getElementById('exp-tbody');
+    const badge = document.getElementById('exp-total-badge');
+    if (!tbody) return;
+    
+    const list = DB.pengeluaran || [];
+    let total = 0;
+    let html = '';
+    
+    list.slice().reverse().forEach(e => {
+        total += Number(e.jumlah) || 0;
+        html += `
+            <tr>
+                <td>${e.tanggal || '-'}</td>
+                <td><span class="badge" style="background: rgba(0, 229, 192, 0.1); color: #00e5c0;">${e.kategori || 'Operasional'}</span></td>
+                <td style="color:#f05c5c; font-weight:bold;">${formatRupiah(e.jumlah)}</td>
+                <td style="color:#7d8590; font-size:12px;">${e.keterangan || '-'}</td>
+                <td style="text-align:right;">
+                    <button onclick="hapusPengeluaran('${e.id}')" style="background:transparent; border:none; color:#f05c5c; cursor:pointer; font-weight:bold; font-size:12px; transition: all 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">🗑️ Hapus</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#7d8590; padding: 20px;">Belum ada catatan pengeluaran</td></tr>';
+    } else {
+        tbody.innerHTML = html;
+    }
+    
+    if (badge) {
+        badge.innerText = `Total: ${formatRupiah(total)}`;
+    }
+}
+
+async function simpanPengeluaranBaru() {
+    const kategori = document.getElementById('exp-kategori').value;
+    const jumlahInput = document.getElementById('exp-jumlah');
+    const keteranganInput = document.getElementById('exp-keterangan');
+    
+    const jumlah = parseInt(jumlahInput.value) || 0;
+    const keterangan = keteranganInput.value.trim();
+    
+    if (jumlah <= 0) {
+        showToast('⚠️ Jumlah pengeluaran harus lebih besar dari Rp0!', true);
+        return;
+    }
+    if (!keterangan) {
+        showToast('⚠️ Keterangan pengeluaran tidak boleh kosong!', true);
+        return;
+    }
+    
+    const newId = 'EXP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const petugasNama = currentPetugas ? currentPetugas.nama : 'system';
+    
+    const newExpense = {
+        id: newId,
+        tanggal: getLocalDateString(),
+        waktu: getLocalDatetimeString(),
+        kategori: kategori,
+        jumlah: jumlah,
+        keterangan: keterangan,
+        petugas_nama: petugasNama
+    };
+    
+    showToast('⏳ Menyimpan pengeluaran...');
+    try {
+        const res = await callAPI('saveExpense', {
+            action: 'saveExpense',
+            expense: newExpense
+        });
+        
+        if (res.status === 'ok') {
+            if (!DB.pengeluaran) DB.pengeluaran = [];
+            DB.pengeluaran.push(newExpense);
+            
+            jumlahInput.value = '';
+            keteranganInput.value = '';
+            
+            renderPengeluaran();
+            showToast('✅ Pengeluaran berhasil dicatat!');
+        } else {
+            showToast('❌ Gagal mencatat pengeluaran ke server', true);
+        }
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+}
+
+async function hapusPengeluaran(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran ini?')) return;
+    
+    showToast('⏳ Menghapus pengeluaran...');
+    try {
+        const res = await callAPI('deleteExpense', {
+            action: 'deleteExpense',
+            id: id
+        });
+        
+        if (res.status === 'ok') {
+            DB.pengeluaran = DB.pengeluaran.filter(e => e.id !== id);
+            renderPengeluaran();
+            showToast('✅ Catatan pengeluaran berhasil dihapus!');
+        } else {
+            showToast('❌ Gagal menghapus pengeluaran dari server', true);
+        }
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, true);
     }
 }
 
@@ -1517,6 +1970,163 @@ function renderSettingsPetugas() {
         `;
     });
     tbody.innerHTML = html;
+}
+
+// ==========================================
+// INTEGRASI BLUETOOTH PRINTER DIRECT (58MM)
+// ==========================================
+
+let bluetoothDevice = null;
+let printCharacteristic = null;
+
+async function hubungkanPrinterBluetooth() {
+    if (!navigator.bluetooth) {
+        showToast('❌ Browser tidak mendukung Web Bluetooth. Gunakan Chrome/Edge!', true);
+        return;
+    }
+    
+    showToast('⏳ Mencari printer Bluetooth...');
+    try {
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+        });
+        
+        showToast('⏳ Menyambungkan ke printer...');
+        const server = await bluetoothDevice.gatt.connect();
+        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+        
+        const characteristics = await service.getCharacteristics();
+        printCharacteristic = characteristics[0];
+        
+        const statusEl = document.getElementById('bt-printer-status');
+        if (statusEl) {
+            statusEl.innerHTML = `Status: <span style="color:#3dd68c; font-weight:bold;">🟢 Terhubung (${bluetoothDevice.name || 'Printer Thermal'})</span>`;
+        }
+        
+        const btnConnect = document.getElementById('btn-connect-bt');
+        if (btnConnect) btnConnect.innerText = '🔄 Ganti Printer';
+        
+        const btnDisconnect = document.getElementById('btn-disconnect-bt');
+        if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+        
+        showToast(`✅ Printer "${bluetoothDevice.name || 'Thermal'}" terhubung!`);
+    } catch (e) {
+        console.error('Koneksi Bluetooth Gagal:', e);
+        showToast(`❌ Koneksi gagal: ${e.message}`, true);
+    }
+}
+
+function putuskanPrinterBluetooth() {
+    if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+        bluetoothDevice.gatt.disconnect();
+    }
+    bluetoothDevice = null;
+    printCharacteristic = null;
+    
+    const statusEl = document.getElementById('bt-printer-status');
+    if (statusEl) statusEl.innerHTML = 'Status: Belum Terhubung';
+    
+    const btnConnect = document.getElementById('btn-connect-bt');
+    if (btnConnect) btnConnect.innerText = '🔌 Hubungkan Printer';
+    
+    const btnDisconnect = document.getElementById('btn-disconnect-bt');
+    if (btnDisconnect) btnDisconnect.style.display = 'none';
+    
+    showToast('🔌 Printer Bluetooth diputuskan');
+}
+
+function encodeESC(text) {
+    const encoder = new TextEncoder();
+    return encoder.encode(text);
+}
+
+async function cetakStrukBluetoothDirect(trx) {
+    if (!printCharacteristic) {
+        showToast('⚠️ Printer belum terhubung! Gunakan cetak browser...', true);
+        window.print();
+        return;
+    }
+    
+    showToast('⏳ Mengirim data cetak...');
+    try {
+        const init = new Uint8Array([0x1B, 0x40]); // ESC @
+        const center = new Uint8Array([0x1B, 0x61, 0x01]); // ESC a 1
+        const left = new Uint8Array([0x1B, 0x61, 0x00]); // ESC a 0
+        const right = new Uint8Array([0x1B, 0x61, 0x02]); // ESC a 2
+        const doubleSize = new Uint8Array([0x1D, 0x21, 0x11]); // double size
+        const normalSize = new Uint8Array([0x1D, 0x21, 0x00]); // normal size
+        
+        let bytes = [];
+        const addBytes = (arr) => bytes.push(...arr);
+        const addText = (text) => bytes.push(...encodeESC(text));
+        
+        addBytes(init);
+        addBytes(center);
+        addBytes(doubleSize);
+        addText('DEPOT PINTAR\n');
+        addBytes(normalSize);
+        addText('EMBUN LAWU\n');
+        addText('Blumbang, Tawangmangu\n');
+        addText('--------------------------------\n');
+        
+        addBytes(left);
+        addText(`ID  : ${trx.id}\n`);
+        const tglStr = new Date(trx.waktu).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+        addText(`Tgl : ${tglStr}\n`);
+        addText(`Kasir: ${trx.petugas_nama}\n`);
+        addText(`Plg : ${trx.nama}\n`);
+        addText('--------------------------------\n');
+        
+        trx.items.forEach(i => {
+            addText(`${i.nama}\n`);
+            const qtyPrice = `  ${i.qty} x ${i.harga.toLocaleString('id-ID')}`;
+            const sub = Number(i.subtotal).toLocaleString('id-ID');
+            const spaces = 30 - qtyPrice.length - sub.length;
+            const line = qtyPrice + ' '.repeat(Math.max(1, spaces)) + sub + '\n';
+            addText(line);
+        });
+        
+        addText('--------------------------------\n');
+        
+        const addFinancialLine = (label, amount) => {
+            const amtStr = amount.toLocaleString('id-ID');
+            const spaces = 30 - label.length - amtStr.length;
+            addText(label + ' '.repeat(Math.max(1, spaces)) + amtStr + '\n');
+        };
+        
+        addFinancialLine('Subtotal:', trx.subtotal);
+        if (trx.ongkir > 0) {
+            addFinancialLine('Ongkir:', trx.ongkir);
+        }
+        
+        addBytes(doubleSize);
+        addFinancialLine('TOTAL:', trx.total);
+        addBytes(normalSize);
+        
+        addText('--------------------------------\n');
+        addBytes(center);
+        addText(`Bayar : ${trx.bayar.toUpperCase()}\n`);
+        addText(`Status: ${trx.status.toUpperCase()}\n\n`);
+        
+        addText('Terima Kasih Atas Kunjungan Anda\n');
+        addText('Semoga Sehat Selalu! 💧✨\n');
+        addText('\n\n\n\n');
+        
+        const dataToSend = new Uint8Array(bytes);
+        const chunkSize = 128;
+        for (let offset = 0; offset < dataToSend.length; offset += chunkSize) {
+            const chunk = dataToSend.slice(offset, offset + chunkSize);
+            await printCharacteristic.writeValue(chunk);
+            await new Promise(r => setTimeout(r, 45));
+        }
+        
+        showToast('✅ Berhasil dicetak langsung ke printer!');
+    } catch (err) {
+        console.error('Pencetakan Gagal:', err);
+        showToast(`❌ Gagal mencetak: ${err.message}. Menggunakan cetak browser...`, true);
+        window.print();
+    }
 }
 
 // Jalankan sinkronisasi otomatis ketika internet tersambung kembali

@@ -68,6 +68,12 @@ function doPost(e) {
     } else if (action === 'deletePetugas') {
       const result = deletePetugas(data.id);
       output.setContent(JSON.stringify(result));
+    } else if (action === 'saveExpense') {
+      const result = saveExpense(data.expense);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'deleteExpense') {
+      const result = deleteExpense(data.id);
+      output.setContent(JSON.stringify(result));
     } else {
       output.setContent(JSON.stringify({ status: 'ok', message: 'API ready' }));
     }
@@ -203,6 +209,39 @@ function getAllDataResponse() {
     logActivity('ERROR', 'getAllDataResponse', e.toString());
   }
   
+  // Baca pengeluaran dari sheet pengeluaran
+  let pengeluaran = [];
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const expSheet = ss.getSheetByName('pengeluaran');
+    if (expSheet) {
+      const expRows = expSheet.getDataRange().getValues();
+      for (let i = 1; i < expRows.length; i++) {
+        const row = expRows[i];
+        if (row[0] && row[0].toString().trim() !== '') {
+          let tanggal = '';
+          if (row[1]) {
+            tanggal = row[1].toString();
+            if (tanggal.includes('T')) {
+              tanggal = tanggal.split('T')[0];
+            }
+          }
+          pengeluaran.push({
+            id: row[0].toString(),
+            tanggal: tanggal,
+            waktu: row[2] ? row[2].toString() : '',
+            kategori: row[3] ? row[3].toString() : 'Operasional',
+            jumlah: Number(row[4]) || 0,
+            keterangan: row[5] ? row[5].toString() : '',
+            petugas_nama: row[6] ? row[6].toString() : 'system'
+          });
+        }
+      }
+    }
+  } catch(e) {
+    logActivity('ERROR_EXPENSES', 'getAllDataResponse', e.toString());
+  }
+  
   // Baca settings dari sheet settings
   let settings = { nama_depot: 'EMBUN LAWU', alamat: 'Blumbang, Tawangmangu' };
   try {
@@ -227,7 +266,8 @@ function getAllDataResponse() {
       settings: settings,
       pelanggan: pelanggan,
       transaksi: transaksi,
-      petugas: getPetugasDariSheet()
+      petugas: getPetugasDariSheet(),
+      pengeluaran: pengeluaran
     }
   };
 }
@@ -300,6 +340,32 @@ function saveTransaction(trx) {
     ];
     
     sheet.appendRow(rowData);
+    
+    // ========== POTONG STOK DI SHEET PRODUK ==========
+    try {
+      const prodSheet = ss.getSheetByName('produk');
+      if (prodSheet && trx.items && Array.isArray(trx.items)) {
+        const prodData = prodSheet.getDataRange().getValues();
+        for (let i = 0; i < trx.items.length; i++) {
+          const item = trx.items[i];
+          const qty = Number(item.qty) || 0;
+          if (qty > 0) {
+            for (let j = 1; j < prodData.length; j++) {
+              if (prodData[j][0].toString() === item.id.toString()) {
+                const currentStok = Number(prodData[j][6]) || 0;
+                if (currentStok > 0) {
+                  const newStok = Math.max(0, currentStok - qty);
+                  prodSheet.getRange(j + 1, 7).setValue(newStok);
+                }
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch(errStok) {
+      logActivity('ERROR_UPDATE_STOK', trx.id, errStok.toString());
+    }
     
     // Catat ke log aktivitas
     logActivity('SAVE_TRANSACTION', trx.id, 
@@ -728,6 +794,58 @@ function deletePetugas(id) {
     return { status: 'error', message: 'Petugas tidak ditemukan' };
   } catch(e) {
     logActivity('ERROR', 'deletePetugas', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== SAVE EXPENSE ==========
+function saveExpense(exp) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('pengeluaran');
+    if (!sheet) {
+      sheet = ss.insertSheet('pengeluaran');
+      sheet.appendRow(['id', 'tanggal', 'waktu', 'kategori', 'jumlah', 'keterangan', 'petugas_nama']);
+    }
+    
+    const rowData = [
+      exp.id || 'EXP_' + Date.now(),
+      exp.tanggal || new Date().toISOString().slice(0, 10),
+      exp.waktu || new Date().toISOString(),
+      exp.kategori || 'Operasional',
+      Number(exp.jumlah) || 0,
+      exp.keterangan || '',
+      exp.petugas_nama || 'system'
+    ];
+    
+    sheet.appendRow(rowData);
+    logActivity('SAVE_EXPENSE', exp.id, 'Kategori: ' + exp.kategori + ', Jumlah: Rp' + exp.jumlah);
+    
+    return { status: 'ok', message: 'Pengeluaran berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'saveExpense', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== DELETE EXPENSE ==========
+function deleteExpense(id) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('pengeluaran');
+    if (!sheet) return { status: 'error', message: 'Sheet pengeluaran tidak ditemukan' };
+    
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === id.toString()) {
+        sheet.deleteRow(i + 1);
+        logActivity('DELETE_EXPENSE', id, 'Berhasil menghapus pengeluaran');
+        return { status: 'ok', message: 'Pengeluaran berhasil dihapus' };
+      }
+    }
+    return { status: 'error', message: 'Pengeluaran tidak ditemukan' };
+  } catch(e) {
+    logActivity('ERROR', 'deleteExpense', e.toString());
     return { status: 'error', message: e.toString() };
   }
 }
