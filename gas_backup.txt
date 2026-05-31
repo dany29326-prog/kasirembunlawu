@@ -1,6 +1,58 @@
 // ========== AQUAPOS - BACKEND APPS SCRIPT (FULLY FIXED) ==========
 const SHEET_ID = '1n9QiPVnRDTPtzHZGWyOebEEQ4xe0K4eGt-n-MEOJWxo';
 
+// Helper: Dapatkan tanggal/waktu terformat sesuai timezone spreadsheet
+function getFormattedDate(date, format) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    return Utilities.formatDate(date || new Date(), ss.getSpreadsheetTimeZone(), format || 'yyyy-MM-dd');
+  } catch(e) {
+    const d = date || new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    if (format === 'yyyy-MM-dd HH:mm:ss') {
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    return `${year}-${month}-${day}`;
+  }
+}
+
+// Helper: Parsing date value dari cell ke string YYYY-MM-DD
+function parseDateValue(val, ss) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    try {
+      return Utilities.formatDate(val, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+    } catch(e) {
+      const year = val.getFullYear();
+      const month = String(val.getMonth() + 1).padStart(2, '0');
+      const day = String(val.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  let str = val.toString().trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+  if (str.indexOf('T') !== -1) {
+    return str.split('T')[0];
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  } catch(e) {}
+  return str;
+}
+
 // ========== DO GET (UNTUK MEMBACA DATA) ==========
 function doGet(e) {
   const action = e?.parameter?.action || '';
@@ -152,14 +204,8 @@ function getAllDataResponse() {
             items = [];
           }
           
-          // Ambil tanggal dalam format YYYY-MM-DD
-          let tanggal = '';
-          if (row[1]) {
-            tanggal = row[1].toString();
-            if (tanggal.includes('T')) {
-              tanggal = tanggal.split('T')[0];
-            }
-          }
+          // Ambil tanggal dalam format YYYY-MM-DD dengan aman
+          const tanggal = parseDateValue(row[1], ss);
           
           transaksi.push({
             id: row[0].toString(),
@@ -219,13 +265,8 @@ function getAllDataResponse() {
       for (let i = 1; i < expRows.length; i++) {
         const row = expRows[i];
         if (row[0] && row[0].toString().trim() !== '') {
-          let tanggal = '';
-          if (row[1]) {
-            tanggal = row[1].toString();
-            if (tanggal.includes('T')) {
-              tanggal = tanggal.split('T')[0];
-            }
-          }
+          // Ambil tanggal dalam format YYYY-MM-DD dengan aman
+          const tanggal = parseDateValue(row[1], ss);
           pengeluaran.push({
             id: row[0].toString(),
             tanggal: tanggal,
@@ -314,16 +355,13 @@ function saveTransaction(trx) {
     }
     
     // Format tanggal
-    let tanggal = trx.tanggal;
-    if (tanggal && tanggal.includes('T')) {
-      tanggal = tanggal.split('T')[0];
-    }
+    const tanggal = parseDateValue(trx.tanggal || new Date(), ss);
     
     // Data yang akan disimpan
     const rowData = [
       trx.id || 'TRX_' + Date.now(),
-      tanggal || new Date().toISOString().slice(0, 10),
-      trx.waktu || new Date().toISOString(),
+      tanggal,
+      trx.waktu || getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'),
       trx.petugas_id || 'P001',
       trx.petugas_nama || 'KHOLID',
       trx.nama || 'Umum',
@@ -374,7 +412,7 @@ function saveTransaction(trx) {
       ', Galon: ' + totalGalon);
     
     // Update backup_meta (terakhir transaksi)
-    updateBackupMeta('last_transaction', new Date().toISOString());
+    updateBackupMeta('last_transaction', getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'));
     
     return {
       status: 'ok',
@@ -405,7 +443,7 @@ function logActivity(type, action, detail) {
     }
     
     sheet.appendRow([
-      new Date().toISOString(),
+      getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'),
       type,
       action,
       detail,
@@ -436,14 +474,14 @@ function updateBackupMeta(key, value) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === key) {
         sheet.getRange(i + 1, 2).setValue(value);
-        sheet.getRange(i + 1, 3).setValue(new Date().toISOString());
+        sheet.getRange(i + 1, 3).setValue(getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'));
         found = true;
         break;
       }
     }
     
     if (!found) {
-      sheet.appendRow([key, value, new Date().toISOString()]);
+      sheet.appendRow([key, value, getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss')]);
     }
     
   } catch(e) {
@@ -543,7 +581,7 @@ function checkSheetData() {
 function createBackup() {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
-    const backupName = 'backup_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const backupName = 'backup_' + getFormattedDate(new Date(), 'yyyy-MM-dd_HH-mm-ss');
     const backup = SpreadsheetApp.create(backupName);
     
     // Copy semua sheet
@@ -556,7 +594,7 @@ function createBackup() {
     });
     
     // Update meta backup
-    updateBackupMeta('last_backup', new Date().toISOString());
+    updateBackupMeta('last_backup', getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'));
     updateBackupMeta('last_backup_file', backup.getUrl());
     
     logActivity('BACKUP', 'createBackup', 'Backup created: ' + backup.getUrl());
@@ -614,13 +652,13 @@ function updateSettings(settings) {
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === key) {
           sheet.getRange(i + 1, 2).setValue(value.toString());
-          sheet.getRange(i + 1, 3).setValue(new Date().toISOString());
+          sheet.getRange(i + 1, 3).setValue(getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'));
           found = true;
           break;
         }
       }
       if (!found) {
-        sheet.appendRow([key, value.toString(), new Date().toISOString()]);
+        sheet.appendRow([key, value.toString(), getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss')]);
       }
     });
     
@@ -719,7 +757,7 @@ function savePetugas(p) {
     if (!sheet) {
       sheet = ss.insertSheet('petugas');
       sheet.appendRow(['id', 'nama', 'is_active', 'jabatan', 'created_at', 'last_login']);
-      sheet.appendRow(['P001', 'KHOLID', 'TRUE', 'Owner', new Date().toISOString().split('T')[0], '']);
+      sheet.appendRow(['P001', 'KHOLID', 'TRUE', 'Owner', getFormattedDate(new Date(), 'yyyy-MM-dd'), '']);
     }
     
     const data = sheet.getDataRange().getValues();
@@ -736,13 +774,13 @@ function savePetugas(p) {
     
     let rowData;
     if (is6Cols) {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = getFormattedDate(new Date(), 'yyyy-MM-dd');
       rowData = [
         p.id,
         p.nama,
         true,
         p.jabatan || 'Kasir',
-        foundIndex !== -1 ? (data[foundIndex][4] || todayStr) : todayStr,
+        foundIndex !== -1 ? (parseDateValue(data[foundIndex][4], ss) || todayStr) : todayStr,
         foundIndex !== -1 ? (data[foundIndex][5] || '') : ''
       ];
       if (foundIndex !== -1) {
@@ -810,8 +848,8 @@ function saveExpense(exp) {
     
     const rowData = [
       exp.id || 'EXP_' + Date.now(),
-      exp.tanggal || new Date().toISOString().slice(0, 10),
-      exp.waktu || new Date().toISOString(),
+      parseDateValue(exp.tanggal || new Date(), ss),
+      exp.waktu || getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'),
       exp.kategori || 'Operasional',
       Number(exp.jumlah) || 0,
       exp.keterangan || '',

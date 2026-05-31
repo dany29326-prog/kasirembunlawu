@@ -981,7 +981,11 @@ function getTanggalTransaksi(t) {
     
     // Jika input berupa objek Date (atau string representasinya)
     if (typeof dateVal === 'string') {
-        const trimmed = dateVal.trim();
+        let trimmed = dateVal.trim();
+        // Perbaikan khusus jika ada string rusak akibat pembagian "GMT" sebelumnya (e.g., "Sun May 31 2026 00:00:00 GM")
+        if (trimmed.endsWith(' GM')) {
+            trimmed = trimmed.replace(/\sGM$/, ' GMT');
+        }
         // 1. Format YYYY-MM-DD
         if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
             return trimmed;
@@ -990,6 +994,7 @@ function getTanggalTransaksi(t) {
         if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
             return trimmed.slice(0, 10);
         }
+        dateVal = trimmed;
     }
     
     // 3. Parsing menggunakan engine bawaan JavaScript (sangat aman untuk format "Tue May 26 2026...")
