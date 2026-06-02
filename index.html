@@ -2658,6 +2658,9 @@ async function prosesSelesaiOrder() {
             renderOrderHariIni();
             renderDashboard();
             renderLaporan();
+            
+            // Tampilkan struk (untuk print / kirim WA)
+            tampilkanStruk(trx);
         } else {
             showToast('❌ Gagal menyimpan transaksi: ' + resTrx.message, true);
         }
