@@ -2538,15 +2538,36 @@ function renderOrderHariIni() {
 }
 
 async function simpanKeOrder() {
-    if (cart.length === 0) {
+    const items = [];
+    for (let id in cart) {
+        let p = findProductById(id);
+        if (p && cart[id] > 0) {
+            items.push({ 
+                id: p.id, 
+                nama: p.nama, 
+                icon: p.icon, 
+                satuan: p.satuan || 'galon', 
+                harga: p.harga, 
+                qty: cart[id], 
+                subtotal: p.harga * cart[id] 
+            });
+        }
+    }
+    
+    if (items.length === 0) {
         showToast('⚠️ Keranjang masih kosong!', true);
         return;
     }
     
+    const subtotal = items.reduce((s,i) => s + i.subtotal, 0);
+    // Kita gunakan subtotal + ongkir jika ongkir ada di kasir (di aplikasi ini cartTotal adalah grand-total display tapi tak tersimpan di variabel global).
+    // Let's compute manually:
+    const finalTotal = subtotal + ongkir; 
+
     const nama = document.getElementById('kasir-nama').value.trim() || 'Umum';
     const wa = document.getElementById('kasir-wa').value.trim();
-    const p = (DB.pelanggan || []).find(x => x.nama === nama);
-    const alamat = p && p.alamat ? p.alamat : '';
+    const pCust = (DB.pelanggan || []).find(x => x.nama === nama);
+    const alamat = pCust && pCust.alamat ? pCust.alamat : '';
     
     const newOrder = {
         id: 'ORD_' + Date.now(),
@@ -2554,8 +2575,8 @@ async function simpanKeOrder() {
         nama: nama,
         wa: wa,
         alamat: alamat,
-        items: cart,
-        total: cartTotal,
+        items: items,
+        total: finalTotal,
         status: 'pending',
         catatan: ''
     };
