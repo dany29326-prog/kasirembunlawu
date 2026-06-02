@@ -423,7 +423,7 @@
 </head>
 <body>
 <!-- PIN LOCK SCREEN -->
-<div id="pin-overlay">
+<div id="pin-overlay" style="display: none !important;">
     <div class="pin-title">🔒 Keamanan Aplikasi</div>
     <div class="pin-subtitle">Masukkan PIN untuk melanjutkan</div>
     <div class="pin-display" id="pin-display">
@@ -2281,7 +2281,7 @@ window.addEventListener('online', () => {
 });
 
 // LOGIKA KUNCI PIN APLIKASI
-let isAppUnlocked = false;
+let isAppUnlocked = true; // Diubah menjadi true agar aplikasi tidak terkunci
 let currentPinInput = '';
 
 function cekStatusPinAwal() {
