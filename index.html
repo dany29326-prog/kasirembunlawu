@@ -1119,7 +1119,8 @@ async function prosesTransaksi() {
     if (payMethod === 'hutang') {
         if (!nama || nama === 'Umum' || nama.length < 3) { showToast('❌ Hutang wajib pakai nama valid!', true); isProcessing = false; if(btnBayar){btnBayar.disabled=false;btnBayar.style.opacity='1';btnBayar.innerText='✅ BAYAR SEKARANG';} return; }
     }
-    const trx = { id: 'TRX_' + Date.now() + '_' + Math.random().toString(36).substr(2,4), tanggal: getLocalDateString(), waktu: getLocalDatetimeString(), petugas_id: currentPetugas.id, petugas_nama: currentPetugas.nama, nama, wa, items, ongkir, subtotal, total, bayar: payMethod, status: payMethod === 'hutang' ? 'hutang' : 'lunas', catatan: '', hutangLunas: false, totalGalon };
+    const shortId = 'TRX-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    const trx = { id: shortId, tanggal: getLocalDateString(), waktu: getLocalDatetimeString(), petugas_id: currentPetugas.id, petugas_nama: currentPetugas.nama, nama, wa, items, ongkir, subtotal, total, bayar: payMethod, status: payMethod === 'hutang' ? 'hutang' : 'lunas', catatan: '', hutangLunas: false, totalGalon };
     showToast('💾 Menyimpan transaksi...');
     try {
         const res = await callAPI('saveTransaction', { action: 'saveTransaction', transaction: trx });
@@ -1596,7 +1597,7 @@ function kirimNotaWA() {
     const statusText = trx.status === 'lunas' ? '✅ LUNAS' : '📒 HUTANG';
     
     const message = `*🧾 NOTA PEMBAYARAN DEPOT PINTAR*
-*Depot Air Minum EMBUN LAWU*
+*EMBUN LAWU*
 --------------------------------------------
 *ID Transaksi :* ${trx.id}
 *Tanggal      :* ${new Date(trx.waktu).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -2625,8 +2626,9 @@ async function prosesSelesaiOrder() {
         return;
     }
     
+    const shortId = 'TRX-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const trx = {
-        id: 'TRX_' + Date.now(),
+        id: shortId,
         tanggal: getLocalDateString(),
         waktu: getLocalDatetimeString(),
         petugas_id: currentPetugas ? currentPetugas.id : 'P001',
