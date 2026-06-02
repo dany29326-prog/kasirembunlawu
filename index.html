@@ -543,7 +543,13 @@
         <button class="btn-secondary" onclick="resetKasir()">🔄 Reset Kasir</button>
     </div>
     <div id="page-pelanggan" class="page">
-        <div class="card"><div class="card-title">👥 Daftar Pelanggan</div><div id="pel-list">Loading...</div></div>
+        <div class="card">
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>👥 Daftar Pelanggan</span>
+                <button onclick="bukaModalPelanggan()" style="background:#00e5c0; color:#0d1117; border:none; border-radius:4px; padding:4px 10px; font-weight:bold; cursor:pointer; font-size:12px;">➕ Tambah</button>
+            </div>
+            <div id="pel-list">Loading...</div>
+        </div>
     </div>
     <div id="page-hutang" class="page">
         <div class="card"><div class="card-title">📒 Daftar Hutang</div><div id="hutang-list">Loading...</div></div>
@@ -777,6 +783,28 @@
             <button class="btn-modal btn-modal-secondary" onclick="cetakNota()">🖨️ Cetak Nota</button>
             <button class="btn-modal btn-modal-primary" onclick="kirimNotaWA()">📱 Kirim WA</button>
             <button class="btn-modal btn-modal-danger" onclick="tutupModalNota()">❌ Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Pelanggan -->
+<div id="pelangganModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="font-size:16px; margin:0;">➕ Tambah Pelanggan</h2>
+            <button onclick="tutupModalPelanggan()" style="background:transparent; border:none; color:#7d8590; font-size:20px; cursor:pointer; font-weight:bold;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;">Nama Pelanggan</label>
+            <input type="text" id="pel-nama-baru" placeholder="Nama lengkap">
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;margin-top:10px;">Nomor WA (Opsional)</label>
+            <input type="text" id="pel-wa-baru" placeholder="Contoh: 0812...">
+            <label style="font-size:12px;color:#7d8590;display:block;margin-bottom:4px;margin-top:10px;">Alamat (Opsional)</label>
+            <input type="text" id="pel-alamat-baru" placeholder="Alamat pelanggan">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-secondary" onclick="tutupModalPelanggan()">Batal</button>
+            <button class="btn-modal btn-modal-primary" onclick="simpanPelangganBaru()">Simpan</button>
         </div>
     </div>
 </div>
@@ -1380,7 +1408,9 @@ function renderPelanggan() {
         DB.pelanggan.forEach(p => {
             html += `<div style="padding:10px 0; border-bottom:1px solid #30363d;">
                         <div><strong>${p.nama}</strong></div>
-                        <div style="font-size:13px; color:#7d8590;">Total order: ${formatRupiah(p.total_order)}</div>
+                        ${p.wa ? `<div style="font-size:12px; color:#3dd68c;">📱 ${p.wa}</div>` : ''}
+                        ${p.alamat ? `<div style="font-size:12px; color:#7d8590;">📍 ${p.alamat}</div>` : ''}
+                        <div style="font-size:13px; color:#7d8590; margin-top:4px;">Total order: ${formatRupiah(p.total_order)}</div>
                         ${p.hutang > 0 ? `<div style="font-size:13px; color:#f0a050;">Hutang: ${formatRupiah(p.hutang)}</div>` : ''}
                     </div>`;
         });
@@ -2013,6 +2043,65 @@ function tutupModalPetugas() {
     document.getElementById('petugasModal').classList.remove('show');
     document.getElementById('pet-nama').value = '';
     document.getElementById('pet-jabatan').value = 'Kasir';
+}
+
+// Modal Tambah Pelanggan
+function bukaModalPelanggan() {
+    document.getElementById('pelangganModal').classList.add('show');
+}
+
+function tutupModalPelanggan() {
+    document.getElementById('pelangganModal').classList.remove('show');
+    document.getElementById('pel-nama-baru').value = '';
+    document.getElementById('pel-wa-baru').value = '';
+    document.getElementById('pel-alamat-baru').value = '';
+}
+
+async function simpanPelangganBaru() {
+    const nama = document.getElementById('pel-nama-baru').value.trim();
+    const wa = document.getElementById('pel-wa-baru').value.trim();
+    const alamat = document.getElementById('pel-alamat-baru').value.trim();
+    
+    if (!nama) {
+        showToast('⚠️ Nama pelanggan tidak boleh kosong!', true);
+        return;
+    }
+    
+    const newId = 'C' + Date.now().toString().substr(-6);
+    const newPelanggan = {
+        id: newId,
+        nama: nama,
+        wa: wa,
+        alamat: alamat,
+        total_order: 0,
+        hutang: 0
+    };
+    
+    showToast('⏳ Menyimpan pelanggan baru...');
+    try {
+        const res = await callAPI('savePelanggan', {
+            action: 'savePelanggan',
+            pelanggan: newPelanggan
+        });
+        
+        if (res.status === 'ok') {
+            if (!DB.pelanggan) DB.pelanggan = [];
+            const existing = DB.pelanggan.find(p => p.nama.toLowerCase() === nama.toLowerCase());
+            if(existing) {
+                 existing.wa = wa;
+                 existing.alamat = alamat;
+            } else {
+                 DB.pelanggan.unshift(newPelanggan);
+            }
+            tutupModalPelanggan();
+            renderPelanggan();
+            showToast('✅ Pelanggan berhasil disimpan!');
+        } else {
+            showToast('❌ Gagal menyimpan pelanggan: ' + (res.message || ''), true);
+        }
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
 }
 
 async function simpanPetugasBaru() {

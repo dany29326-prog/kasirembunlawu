@@ -126,6 +126,9 @@ function doPost(e) {
     } else if (action === 'deleteExpense') {
       const result = deleteExpense(data.id);
       output.setContent(JSON.stringify(result));
+    } else if (action === 'savePelanggan') {
+      const result = savePelanggan(data.pelanggan);
+      output.setContent(JSON.stringify(result));
     } else {
       output.setContent(JSON.stringify({ status: 'ok', message: 'API ready' }));
     }
@@ -229,14 +232,39 @@ function getAllDataResponse() {
       }
     }
     
-    // Hitung pelanggan unik
+    // Hitung pelanggan unik dan baca dari sheet master pelanggan
     const pelangganMap = new Map();
+    
+    // Baca master pelanggan terlebih dahulu
+    try {
+      const pelSheet = ss.getSheetByName('pelanggan');
+      if (pelSheet) {
+        const pelRows = pelSheet.getDataRange().getValues();
+        for (let i = 1; i < pelRows.length; i++) {
+          const row = pelRows[i];
+          if (row[1] && row[1].toString().trim() !== '') {
+            const nama = row[1].toString();
+            pelangganMap.set(nama, {
+              id: row[0] ? row[0].toString() : '',
+              nama: nama,
+              wa: row[2] ? row[2].toString() : '',
+              alamat: row[3] ? row[3].toString() : '',
+              total_order: 0,
+              hutang: 0
+            });
+          }
+        }
+      }
+    } catch(epel) {}
+    
+    // Kalkulasi dari transaksi
     transaksi.forEach(t => {
       const namaPelanggan = t.nama || 'Umum';
       if (!pelangganMap.has(namaPelanggan)) {
         pelangganMap.set(namaPelanggan, {
           nama: namaPelanggan,
           wa: t.wa || '',
+          alamat: '',
           total_order: 0,
           hutang: 0
         });
@@ -246,6 +274,8 @@ function getAllDataResponse() {
       if (t.status === 'hutang' && !t.hutangLunas) {
         p.hutang += t.total;
       }
+      // Update WA if empty
+      if (!p.wa && t.wa) p.wa = t.wa;
     });
     pelanggan = Array.from(pelangganMap.values());
     
@@ -801,6 +831,53 @@ function savePetugas(p) {
     return { status: 'ok', message: 'Petugas berhasil disimpan' };
   } catch(e) {
     logActivity('ERROR', 'savePetugas', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== SAVE PELANGGAN ==========
+function savePelanggan(pel) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('pelanggan');
+    if (!sheet) {
+      sheet = ss.insertSheet('pelanggan');
+      sheet.appendRow(['id', 'nama', 'wa', 'alamat', 'total_order', 'total_galon', 'total_transaksi', 'hutang', 'terakhir_transaksi']);
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    let foundIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][1].toString().toLowerCase() === pel.nama.toString().toLowerCase()) {
+        foundIndex = i;
+        break;
+      }
+    }
+    
+    if (foundIndex !== -1) {
+      // Update WA dan Alamat jika ada
+      if(pel.wa) sheet.getRange(foundIndex + 1, 3).setValue(pel.wa);
+      if(pel.alamat) sheet.getRange(foundIndex + 1, 4).setValue(pel.alamat);
+    } else {
+      // Insert baru
+      const rowData = [
+        pel.id || 'C' + new Date().getTime().toString().substr(-6),
+        pel.nama,
+        pel.wa || '',
+        pel.alamat || '',
+        0, // total_order
+        0, // total_galon
+        0, // total_transaksi
+        0, // hutang
+        '' // terakhir_transaksi
+      ];
+      sheet.appendRow(rowData);
+    }
+    
+    logActivity('SAVE_PELANGGAN', pel.nama, 'Menyimpan data master pelanggan');
+    return { status: 'ok', message: 'Pelanggan berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'savePelanggan', e.toString());
     return { status: 'error', message: e.toString() };
   }
 }
