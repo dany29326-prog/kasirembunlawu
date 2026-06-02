@@ -532,7 +532,8 @@
             </div>
             <div class="grand-total" id="grand-total-display">Total: Rp0</div>
         </div>
-        <input type="text" id="kasir-nama" placeholder="Nama pelanggan (opsional)">
+        <input type="text" id="kasir-nama" placeholder="Nama pelanggan (opsional)" list="list-pelanggan" oninput="autoFillPelanggan()">
+        <datalist id="list-pelanggan"></datalist>
         <input type="text" id="kasir-wa" placeholder="Nomor WhatsApp (opsional)">
         <div class="pay-methods">
             <div class="pay-btn selected" onclick="selectPay('tunai')">💵 Tunai</div>
@@ -1417,6 +1418,21 @@ function renderPelanggan() {
     }
     const pelListEl = document.getElementById('pel-list');
     if (pelListEl) pelListEl.innerHTML = html;
+    
+    // Update Datalist untuk menu Kasir
+    const datalist = document.getElementById('list-pelanggan');
+    if (datalist && DB.pelanggan) {
+        datalist.innerHTML = DB.pelanggan.map(p => `<option value="${p.nama}">`).join('');
+    }
+}
+
+function autoFillPelanggan() {
+    const inputNama = document.getElementById('kasir-nama').value;
+    if (!DB.pelanggan) return;
+    const p = DB.pelanggan.find(x => x.nama === inputNama);
+    if (p && p.wa) {
+        document.getElementById('kasir-wa').value = p.wa;
+    }
 }
 
 function renderHutang() {
