@@ -129,6 +129,12 @@ function doPost(e) {
     } else if (action === 'savePelanggan') {
       const result = savePelanggan(data.pelanggan);
       output.setContent(JSON.stringify(result));
+    } else if (action === 'saveOrder') {
+      const result = saveOrder(data.order);
+      output.setContent(JSON.stringify(result));
+    } else if (action === 'updateOrderStatus') {
+      const result = updateOrderStatus(data.id, data.status);
+      output.setContent(JSON.stringify(result));
     } else {
       output.setContent(JSON.stringify({ status: 'ok', message: 'API ready' }));
     }
@@ -313,6 +319,39 @@ function getAllDataResponse() {
     logActivity('ERROR_EXPENSES', 'getAllDataResponse', e.toString());
   }
   
+  // Baca Order Harian
+  let order_harian = [];
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const orderSheet = ss.getSheetByName('order_harian');
+    if (orderSheet) {
+      const rows = orderSheet.getDataRange().getValues();
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[0] && row[0].toString().trim() !== '' && row[5] !== 'selesai') {
+          let items = [];
+          try {
+            items = typeof row[3] === 'string' ? JSON.parse(row[3]) : row[3];
+          } catch(e) {}
+          
+          order_harian.push({
+            id: row[0].toString(),
+            waktu: row[1] ? row[1].toString() : '',
+            nama: row[2] ? row[2].toString() : 'Umum',
+            items: items,
+            total: Number(row[4]) || 0,
+            status: row[5] ? row[5].toString() : 'pending',
+            catatan: row[6] ? row[6].toString() : '',
+            wa: row[7] ? row[7].toString() : '',
+            alamat: row[8] ? row[8].toString() : ''
+          });
+        }
+      }
+    }
+  } catch(e) {
+    logActivity('ERROR_ORDER', 'getAllDataResponse', e.toString());
+  }
+  
   // Baca settings dari sheet settings
   let settings = { nama_depot: 'EMBUN LAWU', alamat: 'Blumbang, Tawangmangu' };
   try {
@@ -338,7 +377,8 @@ function getAllDataResponse() {
       pelanggan: pelanggan,
       transaksi: transaksi,
       petugas: getPetugasDariSheet(),
-      pengeluaran: pengeluaran
+      pengeluaran: pengeluaran,
+      order_harian: order_harian
     }
   };
 }
@@ -909,6 +949,65 @@ function deletePetugas(id) {
     return { status: 'error', message: 'Petugas tidak ditemukan' };
   } catch(e) {
     logActivity('ERROR', 'deletePetugas', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+// ========== ORDER HARIAN ==========
+function saveOrder(order) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName('order_harian');
+    if (!sheet) {
+      sheet = ss.insertSheet('order_harian');
+      sheet.appendRow(['id', 'waktu', 'nama', 'items', 'total', 'status', 'catatan', 'wa', 'alamat']);
+    }
+    
+    const rowData = [
+      order.id || 'ORD_' + Date.now(),
+      order.waktu || getFormattedDate(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+      order.nama || 'Umum',
+      JSON.stringify(order.items || []),
+      order.total || 0,
+      order.status || 'pending',
+      order.catatan || '',
+      order.wa || '',
+      order.alamat || ''
+    ];
+    
+    sheet.appendRow(rowData);
+    
+    logActivity('SAVE_ORDER', order.id, 'Pesanan baru masuk: ' + order.nama);
+    return { status: 'ok', message: 'Order berhasil disimpan' };
+  } catch(e) {
+    logActivity('ERROR', 'saveOrder', e.toString());
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+function updateOrderStatus(id, status) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName('order_harian');
+    if (!sheet) return { status: 'error', message: 'Sheet order tidak ditemukan' };
+    
+    const data = sheet.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === id.toString()) {
+        sheet.getRange(i + 1, 6).setValue(status);
+        found = true;
+        break;
+      }
+    }
+    
+    if (found) {
+      logActivity('UPDATE_ORDER', id, 'Status diubah ke: ' + status);
+      return { status: 'ok', message: 'Status order diperbarui' };
+    }
+    return { status: 'error', message: 'Order tidak ditemukan' };
+  } catch(e) {
+    logActivity('ERROR', 'updateOrderStatus', e.toString());
     return { status: 'error', message: e.toString() };
   }
 }
